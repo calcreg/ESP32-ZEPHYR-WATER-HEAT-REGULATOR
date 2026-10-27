@@ -1,0 +1,40 @@
+/ {
+    aliases {
+        my-led0 = &led0;
+    };
+
+    leds {
+        compatible = "gpio-leds";
+        led0: d23 {
+            gpios = <&gpio0 23 GPIO_ACTIVE_HIGH>;
+        };
+    };
+};
+
+/ {
+    /* No custom nodes required */
+};
+
+&spi2 {
+    status = "okay";
+    pinctrl-0 = <&spi2_default>;
+    pinctrl-names = "default";
+    cs-gpios = <&gpio0 21 GPIO_ACTIVE_LOW>;
+
+    /* SPI device child node for data transfers */
+    nokia_dev: nokia@0 {
+        compatible = "vnd,spi-device";
+        reg = <0>;
+        spi-max-frequency = <400000>;
+    };
+};
+
+/* Remap SPI SCLK to GPIO 5 and MOSI (DIN) to GPIO 18 */
+&pinctrl {
+    spi2_default: spi2_default {
+        group1 {
+            pinmux = <SPIM2_SCLK_GPIO5>,
+                     <SPIM2_MOSI_GPIO18>;
+        };
+    };
+};
