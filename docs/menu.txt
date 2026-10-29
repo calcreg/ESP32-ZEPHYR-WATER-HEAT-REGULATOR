@@ -1,0 +1,42 @@
+We want to create a menu in json format.
+
+Here are the specifications. 
+"name" is the displayed name of the menu. 
+'--' means a comment for the reader.
+
+D0: "" -- Front Page
+- Temp_Detected / Temp_Heat_Unused
+- Time (example 17H35)
+- Date (example 29/10/2026)
+- STATE (EN CHAUFFE / REGUL.) -- EN CHAUFFE should be blinking
+
+M0: "MENU" -- When one button is pressed
+- TEMP.EAU	-> M0_0
+- CHAUFFER	-> M0_1
+- PARAMETRES	-> M0_2
+
+M0_0: "TEMP.EAU" -- Information about temperatures detected/analysed
+- MAX: (Local Max Value detected) -- Pic of temperature as water flows though the hot hot-pipe
+- MIN: (Local Min Value detected) -- When water is not used, the hot-pipe is cooling down
+- ACTUELLE: (current value) -- current temperature of the hot-pipe
+- T.CIBLE: (Temperature to reach)
+
+M0_1: "CHAUFFER\nMAINTENANT"-- CHAUFFER
+- DUREE: (heat duration among value: 0H15, 0H30, 0H45, 1H00, 1H15, 1H30, 1H45, 2H00, 2H30, 3H00)
+
+M0_2: "PARAMETRES" -- These are the settings
+- REGUL: (ON/F.ON/OFF) -- Regulation ON, F.ON heats fully defined period. OFF means no heat at all.
+- HEURE: (format 17H35)		-> SELECT and MODIFY HERE
+- DATE: (MANU/AUTO)		-> SELECT and MODIFY HERE -- AUTO uses WiFi to retrieve Time and Date
+- HORAIRES CH.			-> M0_2_0
+- T.CIBLE			-> MODIFY HERE
+
+M0_2_0: "HORAIRE CH." -- 2 Heating periods possible
+- DEBUT1 (0H00)
+- FIN1   (2H00)
+- DEBUT2 (17H30 / --)
+- FIN2   (20H00 / --)
+
+
+
+
