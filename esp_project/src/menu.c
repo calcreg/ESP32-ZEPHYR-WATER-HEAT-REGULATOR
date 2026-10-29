@@ -32,14 +32,14 @@ void menu_render(void) {
     fb_draw_line_under_title();
     /*Close with outside box*/
     draw_box();
-    
-    /* 2. Render Items Dynamically */
+
+    /* 2. Render Items Dynamically */ 
     for (int i = 0; i < current_screen->item_count && i < 5; i++) {
         //int display_row = (current_screen->name[0] != '\0') ? (1 + i) : i;
         int display_row = i+1;
 
         int sel_arrow=0;
-        if (i == current_selection){
+        if (i == current_selection && (strcmp(current_screen->id, "D0") != 0)){
             if (sel_arrow == 1)
                 // Draw selection cursor '>'
                 draw_string(fb, 0, display_row, ">");

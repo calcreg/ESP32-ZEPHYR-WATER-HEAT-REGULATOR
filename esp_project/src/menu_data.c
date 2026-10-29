@@ -34,9 +34,9 @@ static const MenuItem items_m0_1[] = {
 static const MenuItem items_m0_2[] = {
     { .label = "REGUL: ON" },
     { .label = "HEURE: 17H35" },
-    { .label = "DATE: AUTO" }
+    { .label = "DATE: AUTO" },
     { .label = "HORAIRES CH.", .target_screen = "M0_2_0" },
-    { .label = "T.CIBLE" }
+    { .label = "T.CIBLE:" }
 };
 
 /* M0_2_0: HORAIRE CH. */

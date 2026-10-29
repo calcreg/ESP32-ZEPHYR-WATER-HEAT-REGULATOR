@@ -63,7 +63,7 @@ void draw_string_inv(uint8_t *fb, int x, int page, const char *str)
                 fb[(page * DISPLAY_WIDTH) + (x + col)] = (~glyph[col]);
             }
         }
-        fb[(page * DISPLAY_WIDTH) + (x + 5)] = 0xFC;
+        fb[(page * DISPLAY_WIDTH) + (x + 5)] = 0xFF;
         x += 6;
     }
 }
