@@ -6,6 +6,7 @@
 typedef struct {
     const char *label;
     const char *target_screen;
+    const char *target_action;
 } MenuItem;
 
 typedef struct {

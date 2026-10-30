@@ -71,7 +71,7 @@ void draw_string_inv(uint8_t *fb, int x, int page, const char *str)
 /* Classic PCD8544 Initialization Sequence */
 uint8_t init_cmds[] = {
     0x21, // 1: Extended instruction set (H=1)
-    0xAA, // 2: Set VOP (Contrast). Try changing 0xB1 between 0x80 and 0xEF if needed.
+    0xA9, // 2: Set VOP (Contrast). Try changing 0xB1 between 0x80 and 0xEF if needed.
     0x04, // 3: Set Temp coefficient (TC2)
     0x14, // 4: Set bias system (BSx = 0x14 for 1:48 bias)
     0x20, // 5: Back to Basic instruction set (H=0)

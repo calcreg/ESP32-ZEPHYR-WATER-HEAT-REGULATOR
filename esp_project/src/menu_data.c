@@ -27,16 +27,16 @@ static const MenuItem items_m0_0[] = {
 
 /* M0_1: CHAUFFER */
 static const MenuItem items_m0_1[] = {
-    { .label = "DUREE: 1H00" }
+    { .label = "DUREE: 1H00", .target_action = "set_duration" }
 };
 
 /* M0_2: PARAMETRES */
 static const MenuItem items_m0_2[] = {
-    { .label = "REGUL: ON" },
-    { .label = "HEURE: 17H35" },
-    { .label = "DATE: AUTO" },
+    { .label = "REGUL: ----", .target_action = "set_regulation"  },
+    { .label = "HEURE: --H--", .target_action = "set_manual_time" },
+    { .label = "DATE : ----", .target_action = "set_datetime" },
     { .label = "HORAIRES CH.", .target_screen = "M0_2_0" },
-    { .label = "T.CIBLE:" }
+    { .label = "T.CIBLE:--°C", .target_action = "set_target_temp"  }
 };
 
 /* M0_2_0: HORAIRE CH. */
