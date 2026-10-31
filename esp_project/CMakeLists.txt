@@ -15,6 +15,7 @@ target_sources(app PRIVATE
     src/menu_data.c
     src/wifi.c
     src/state.c
+    src/time.c
     )
 
 

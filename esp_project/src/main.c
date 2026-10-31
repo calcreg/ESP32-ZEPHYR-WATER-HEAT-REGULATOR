@@ -8,6 +8,8 @@
 #include "wifi.h"
 #include "state.h"
 
+extern void refresh_local_time(void);
+
 static const struct gpio_dt_spec led0 = GPIO_DT_SPEC_GET(DT_ALIAS(my_led0), gpios);
 /* Fetch pin specs directly from device tree aliases */
 static const struct gpio_dt_spec btn_up = GPIO_DT_SPEC_GET(DT_ALIAS(btn_up), gpios);
@@ -104,8 +106,9 @@ int main(void)
     }
 
      LOG_INF("System ready. Entering main event loop.");
-
+    int ctn=0;
     while (1) {
+        ctn++;
         // Change the state of the pin and print
         state = !state;
         // Set pin state
@@ -145,5 +148,6 @@ int main(void)
         //Faire la boucle d'attente d'appuie sur un bouton dans un autre thread
         // Pour que la LED clignote normalement versus detection du bouton OK.
         k_sleep(K_MSEC(500));
+        if (ctn %120 == 0) {refresh_local_time();menu_render();}
     }
 }

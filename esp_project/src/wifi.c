@@ -2,6 +2,7 @@
 #include "state.h"
 
 extern void menu_render();
+extern void update_system_time_from_sntp(time_t) ;
 
 LOG_MODULE_REGISTER(app_wifi, LOG_LEVEL_INF);
 
@@ -216,6 +217,7 @@ int fetch_internet_time_and_date(char *time_buf, size_t time_len, char *date_buf
     snprintf(app_state.CurrentTime, sizeof(app_state.CurrentTime), "%s", time_buf);
     snprintf(app_state.CurrentDate, sizeof(app_state.CurrentDate), "%s", date_buf);
     LOG_INF("Network Time Synced Successfully -> Date: %s | Time: %s", date_buf, time_buf);
+    update_system_time_from_sntp(epoch_seconds);
     return 0;
 }
 
