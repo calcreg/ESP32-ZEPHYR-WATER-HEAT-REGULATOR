@@ -15,7 +15,7 @@
 #include <zephyr/net/net_ip.h>
 
 #define NTP_SERVER "pool.ntp.org"
-#define NTP_TIMEOUT_MS 5000 // 5 seconds timeout
+#define NTP_TIMEOUT_MS 10000 // 10 seconds timeout
 
 #define WIFI_SSID "********"
 #define WIFI_PSK  "********"

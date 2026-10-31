@@ -1,4 +1,7 @@
 #include "wifi.h"
+#include "state.h"
+
+extern void menu_render();
 
 LOG_MODULE_REGISTER(app_wifi, LOG_LEVEL_INF);
 
@@ -45,32 +48,6 @@ static void scan_result_handler(struct net_mgmt_event_callback *cb,
         k_sem_give(&scan_done_sem);
     }
 }
-
-/*static void net_mgmt_event_handler(struct net_mgmt_event_callback *cb,
-                                   uint32_t mgmt_event,
-                                   struct net_if *iface)
-{
-    if (mgmt_event == NET_EVENT_WIFI_CONNECT_RESULT) {
-        const struct wifi_status *status = (const struct wifi_status *)cb->info;
-        if (status->status == 0) {
-            LOG_INF(">> Wi-Fi Link established successfully!");
-        } else {
-            LOG_ERR(">> Wi-Fi Association failed: %d", status->status);
-        }
-    } 
-    else if (mgmt_event == NET_EVENT_IPV4_ADDR_ADD) {
-        // Grab the assigned IP address from the interface to print it out
-        char ip_str[NET_IPV4_ADDR_LEN];
-        struct net_if_addr *if_addr = &iface->config.ip.ipv4->unicast[0];
-        
-        net_addr_ntop(AF_INET, &if_addr->address.in_addr, ip_str, sizeof(ip_str));
-        
-        LOG_INF(">> DHCP Success! Assigned IP Address: %s", ip_str);
-        
-        // UNBLOCK THE WAITING THREAD
-        k_sem_give(&dhcp_obtain_sem);
-    }
-}*/
 /* L2 Wi-Fi Event Handler */
 static void wifi_event_handler(struct net_mgmt_event_callback *cb,
                                uint32_t mgmt_event,
@@ -129,8 +106,12 @@ void wifi_connect_init(void) {
 
     if (!target_ap.found) {
         LOG_ERR("Target AP %s not found during scan!",WIFI_SSID);
-        return;
+        //return -1;
     }
+    /*Send on screen Found Wifi msg using Time place*/
+    snprintf(app_state.CurrentTime, sizeof(app_state.CurrentTime), "%s",WIFI_SSID);
+    menu_render();
+    k_sleep(K_SECONDS(1));
 
     LOG_INF("Connecting to best AP -> SSID: %s, Channel: %d, Security: %d, RSSI: %d dBm",
             target_ap.ssid, target_ap.channel, target_ap.security, target_ap.rssi);
@@ -154,6 +135,14 @@ void wifi_connect_init(void) {
     struct net_if *iface = net_if_get_default();
     if (net_mgmt(NET_REQUEST_WIFI_CONNECT, iface, &params, sizeof(params)) < 0) {
         LOG_ERR("Wi-Fi connection request failed!");
+        snprintf(app_state.CurrentTime, sizeof(app_state.CurrentTime), "RQTFAIL");
+        menu_render();
+        k_sleep(K_SECONDS(1));
+        //return -1;
+    }else{
+        snprintf(app_state.CurrentTime, sizeof(app_state.CurrentTime), "REQT OK");
+        menu_render();
+        k_sleep(K_SECONDS(1));
     }
 }
 
@@ -223,7 +212,9 @@ int fetch_internet_time_and_date(char *time_buf, size_t time_len, char *date_buf
              timeinfo.tm_mday,          /* Day of the month (1-31) */
              timeinfo.tm_mon + 1,       /* Month (0-11 -> add 1) */
              timeinfo.tm_year + 1900);  /* Year since 1900 */
-
+    /*Update app_state data*/
+    snprintf(app_state.CurrentTime, sizeof(app_state.CurrentTime), "%s", time_buf);
+    snprintf(app_state.CurrentDate, sizeof(app_state.CurrentDate), "%s", date_buf);
     LOG_INF("Network Time Synced Successfully -> Date: %s | Time: %s", date_buf, time_buf);
     return 0;
 }

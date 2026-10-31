@@ -37,7 +37,8 @@ void draw_string(uint8_t *fb, int x, int page, const char *str)
 {
     while (*str) {
         char c = *str++;
-        if (c < 32 || c > 126) c = ' ';
+        /* "°" of °C is 176 in ASCII we need to keep it as is*/
+        if ((c < 32 || c > 126) && c != 176) c = ' ';
         
         const uint8_t *glyph = font5x7[(unsigned char)c];
         
@@ -54,7 +55,8 @@ void draw_string_inv(uint8_t *fb, int x, int page, const char *str)
 {
     while (*str) {
         char c = *str++;
-        if (c < 32 || c > 126) c = ' ';
+        /* "°" of °C is 176 in ASCII we need to keep it as is*/
+        if ((c < 32 || c > 126) && c != 176) continue; //c = ' ';
         
         const uint8_t *glyph = font5x7[(unsigned char)c];
         

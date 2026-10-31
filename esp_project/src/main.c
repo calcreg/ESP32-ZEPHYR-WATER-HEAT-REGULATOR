@@ -6,19 +6,22 @@
 #include "display.h"
 #include "menu.h"
 #include "wifi.h"
+#include "state.h"
 
 static const struct gpio_dt_spec led0 = GPIO_DT_SPEC_GET(DT_ALIAS(my_led0), gpios);
 /* Fetch pin specs directly from device tree aliases */
 static const struct gpio_dt_spec btn_up = GPIO_DT_SPEC_GET(DT_ALIAS(btn_up), gpios);
 static const struct gpio_dt_spec btn_down = GPIO_DT_SPEC_GET(DT_ALIAS(btn_down), gpios);
 static const struct gpio_dt_spec btn_select = GPIO_DT_SPEC_GET(DT_ALIAS(btn_select), gpios);
+static const struct gpio_dt_spec btn_back= GPIO_DT_SPEC_GET(DT_ALIAS(btn_back), gpios);
 
 LOG_MODULE_REGISTER(app_main, LOG_LEVEL_INF);
 
 
 int init_buttons(void) {
     if (!device_is_ready(btn_up.port) || 
-        !device_is_ready(btn_down.port) || 
+        !device_is_ready(btn_down.port) ||
+        !device_is_ready(btn_back.port) || 
         !device_is_ready(btn_select.port)) {
         LOG_ERR("One or more button GPIO ports not ready!");
         return -1;
@@ -27,6 +30,7 @@ int init_buttons(void) {
     gpio_pin_configure_dt(&btn_up, GPIO_INPUT);
     gpio_pin_configure_dt(&btn_down, GPIO_INPUT);
     gpio_pin_configure_dt(&btn_select, GPIO_INPUT);
+    gpio_pin_configure_dt(&btn_back, GPIO_INPUT);
 
     LOG_INF("Buttons initialized via Device Tree overlay.");
     return 0;
@@ -75,6 +79,8 @@ int main(void)
     wifi_connect_init();
 
     LOG_INF("Waiting for network time synchronization...");
+    snprintf(app_state.CurrentTime, sizeof(app_state.CurrentTime), "WSNTP");
+    menu_render();
     if (wifi_wait_for_ip(K_SECONDS(15)) == 0) {
         char time_str[16];
         char date_str[16];
@@ -84,6 +90,10 @@ int main(void)
         /* Fetch time from internet */
         if (fetch_internet_time_and_date(time_str, sizeof(time_str), date_str, sizeof(date_str)) == 0) {
             LOG_INF("Time successfully synchronized: %s, %s", date_str, time_str);
+            menu_render();
+        }else{
+            snprintf(app_state.CurrentTime, sizeof(app_state.CurrentTime), "--H--");
+            menu_render();
         }
         
         /* Lock down the network immediately after sync to ensure security */
@@ -120,6 +130,12 @@ int main(void)
 
         if (gpio_pin_get_dt(&btn_select) == 1) {
             menu_process_event(EVENT_SELECT);
+            menu_render();
+            k_msleep(200);
+        }
+
+        if (gpio_pin_get_dt(&btn_back) == 1) {
+            menu_process_event(EVENT_BACK);
             menu_render();
             k_msleep(200);
         }

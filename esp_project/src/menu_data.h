@@ -3,10 +3,14 @@
 
 #include <stdint.h>
 
+/* Define the function pointer type for actions */
+typedef void (*menu_action_cb_t)(void);
+
 typedef struct {
     const char *label;
     const char *target_screen;
-    const char *target_action;
+    const char *strPtr;
+    menu_action_cb_t target_action; /* Direct function pointer callback when selected */
 } MenuItem;
 
 typedef struct {

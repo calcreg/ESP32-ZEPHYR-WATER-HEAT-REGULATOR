@@ -35,25 +35,35 @@ void menu_render(void) {
 
     /* 2. Render Items Dynamically */ 
     for (int i = 0; i < current_screen->item_count && i < 5; i++) {
-        //int display_row = (current_screen->name[0] != '\0') ? (1 + i) : i;
-        int display_row = i+1;
+        int display_row = i + 1;
+        char line_buf[32];
 
-        int sel_arrow=0;
-        if (i == current_selection && (strcmp(current_screen->id, "D0") != 0)){
-            if (sel_arrow == 1)
-                // Draw selection cursor '>'
-                draw_string(fb, 0, display_row, ">");
-            else
-                //Mode sel_arrow==0 : dark background
-                if (current_screen->items[i].label) {
-                    draw_string_inv(fb, 6, display_row, (char *)current_screen->items[i].label);
-                }
+        /* 1. Combine label and dynamic strPtr (if it exists) into a single line buffer */
+        if (current_screen->items[i].strPtr) {
+            snprintf(line_buf, sizeof(line_buf), "%s%s", 
+                    current_screen->items[i].label ? current_screen->items[i].label : "", 
+                    current_screen->items[i].strPtr);
+        } else if (current_screen->items[i].label) {
+            snprintf(line_buf, sizeof(line_buf), "%s", current_screen->items[i].label);
+        } else {
+            line_buf[0] = '\0';
         }
-        else {
-            // Draw item label text
-            if (current_screen->items[i].label) {
-                draw_string(fb, 6, display_row, (char *)current_screen->items[i].label);
+
+        /* 2. Render based on selection state */
+        int sel_arrow = 0; /* Keep your existing arrow logic variable */
+        
+        if (i == current_selection && (strcmp(current_screen->id, "D0") != 0)) {
+            if (sel_arrow == 1) {
+                /* Draw selection cursor '>' at the edge, followed by the full line */
+                draw_string(fb, 0, display_row, ">");
+                draw_string(fb, 6, display_row, line_buf);
+            } else {
+                /* Mode sel_arrow == 0: Dark background highlights the ENTIRE line */
+                draw_string_inv(fb, 6, display_row, line_buf);
             }
+        } else {
+            /* Unselected item: Draw normal text */
+            draw_string(fb, 6, display_row, line_buf);
         }
     }
 
@@ -85,6 +95,7 @@ void menu_process_event(MenuEvent event) {
                 current_selection = 0;
             } else {
                 const char *target = current_screen->items[current_selection].target_screen;
+                menu_action_cb_t action = current_screen->items[current_selection].target_action;
                 if (target) {
                     const Screen *next_scr = get_screen_by_id(target);
                     if (next_scr) {
@@ -92,6 +103,10 @@ void menu_process_event(MenuEvent event) {
                         current_screen = next_scr;
                         current_selection = 0;
                     }
+                }
+                else if (action){
+                    /*Launch the related callback */
+                    action();
                 }
             }
             break;
@@ -111,3 +126,4 @@ void menu_process_event(MenuEvent event) {
             break;
     }
 }
+
