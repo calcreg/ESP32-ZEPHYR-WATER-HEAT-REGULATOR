@@ -26,6 +26,10 @@ typedef struct {
     char RegulMode[16];
     char HeatDuration[8];   /*For immediate heat*/
     char CHTitle[16];       /*Immediat Heat Title, example : CH.:1H30*/
+    /*For editing Time and Date*/
+    bool is_editing;        // True if currently editing a time string
+    int  edit_digit_pos;    // Current active character index (0, 1, 3, or 4)
+    char *editing_target_ptr; // Pointer to the char variable in edition
 } AppState;
 
 /* Expose a global reference to the application state */

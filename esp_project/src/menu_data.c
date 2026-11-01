@@ -12,10 +12,10 @@ void cb_set_duration_1H00(void);
 void cb_set_duration_1H30(void);
 void cb_set_duration_2H00(void);
 void cb_set_regulation(void);
-void cb_set_manual_time(void);
+void cb_set_clock_time(void);
 void cb_set_datetime(void);
 void cb_set_target_temp(void);
-
+void cb_set_Time(void);
 
 /* D0: Front Page */
 static const MenuItem items_d0[] = {
@@ -53,7 +53,7 @@ static const MenuItem items_m0_1[] = {
 /* M0_2: PARAMETRES */
 static const MenuItem items_m0_2[] = {
     { .label = "REGUL: ", .strPtr = app_state.RegulMode, .target_action = cb_set_regulation  },
-    { .label = "HEURE: ", .strPtr = app_state.CurrentTime, .target_action = cb_set_manual_time },
+    { .label = "HEURE: ", .strPtr = app_state.CurrentTime, .target_action = cb_set_clock_time },
     { .label = "DT:", .strPtr = app_state.CurrentDate, .target_action = cb_set_datetime },
     { .label = "HORAIRES CH.", .target_screen = "M0_2_0" },
     { .label = "T.CIBLE: ", .strPtr = app_state.TempTarget, .target_action = cb_set_target_temp  }
@@ -61,10 +61,10 @@ static const MenuItem items_m0_2[] = {
 
 /* M0_2_0: HORAIRE CH. */
 static const MenuItem items_m0_2_0[] = {
-    { .label = "DEBUT1 0H00" },
-    { .label = "FIN1   2H00" },
-    { .label = "DEBUT2 17H30" },
-    { .label = "FIN2   20H00" }
+    { .label = "DEBUT1:" , .strPtr = app_state.TimeStartHeat1, .target_action = cb_set_Time },
+    { .label = "FIN1  :" , .strPtr = app_state.TimeStopHeat1, .target_action = cb_set_Time },
+    { .label = "DEBUT2:" , .strPtr = app_state.TimeStartHeat2, .target_action = cb_set_Time },
+    { .label = "FIN2  :" , .strPtr = app_state.TimeStopHeat2, .target_action = cb_set_Time }
 };
 
 const Screen screen_d0     = { "D0", "  REGULATEUR", "Front Page", items_d0, 5 };
@@ -116,6 +116,14 @@ void cb_set_regulation(void) {
     menu_render();
 }
 
-void cb_set_manual_time(void){}
+void cb_set_clock_time(void){}
 void cb_set_datetime(void){}
 void cb_set_target_temp(void){}
+
+void cb_set_Time(){
+    /*Reset editing state and position of the cursor*/
+    app_state.is_editing = true;
+    app_state.edit_digit_pos = 0;
+}
+
+

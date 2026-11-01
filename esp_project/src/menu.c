@@ -1,17 +1,23 @@
+#include <zephyr/kernel.h>
 #include <string.h>
 #include <stdio.h>
 #include "display.h"
 #include "menu.h"
 #include "menu_data.h"
+#include "state.h"
 
 /* External references from display.c */
 extern uint8_t fb[];
 extern uint8_t set_addr[];
 extern void pcd8544_send(const uint8_t *data, size_t len, bool is_data);
+void menu_process_event_editing(MenuEvent event, char *time_str);
 
-static const Screen *current_screen = &screen_d0;
+const Screen *current_screen = &screen_d0;
 static const Screen *parent_screen = &screen_d0;
 static int current_selection = 0;
+
+/* Draw Arrow to have a display of 'line selection' */
+int sel_arrow = 0; /*0 = Dark background, 1 = Left Arrow*/
 
 void menu_init(void) {
     current_screen = &screen_d0;
@@ -50,8 +56,6 @@ void menu_render(void) {
         }
 
         /* 2. Render based on selection state */
-        int sel_arrow = 0; /* Keep your existing arrow logic variable */
-        
         if (i == current_selection && (strcmp(current_screen->id, "D0") != 0)) {
             if (sel_arrow == 1) {
                 /* Draw selection cursor '>' at the edge, followed by the full line */
@@ -75,6 +79,14 @@ void menu_render(void) {
 void menu_process_event(MenuEvent event) {
     if (!current_screen) return;
 
+    /* If we are actively editing time/Date digits, route events to the digit editor */
+    if (app_state.is_editing) {
+        menu_process_event_editing(
+            event, 
+            (char*)current_screen->items[current_selection].strPtr
+            );
+        return; 
+    }
     switch (event) {
         case EVENT_UP:
             if (current_selection > 0) {
@@ -115,7 +127,10 @@ void menu_process_event(MenuEvent event) {
             if (current_screen != &screen_d0) {
                 if (current_screen == &screen_m0) {
                     current_screen = &screen_d0;
-                } else {
+                } else if(current_screen == &screen_m0_2_0){
+                    current_screen = &screen_m0_2;
+                }
+                else{
                     current_screen = &screen_m0; // Fallback back to main menu
                 }
                 current_selection = 0;
@@ -127,3 +142,82 @@ void menu_process_event(MenuEvent event) {
     }
 }
 
+
+/* For editing Time and Date --------------*/
+void modify_active_digit(char *time_str, int pos, int direction) {
+    if (!time_str) return;
+    
+    char c = time_str[pos];
+    if (c == '-') c = '0'; /*Start from scratch*/
+    if (c < '0' || c > '9') return; // Safety check
+
+    int val = c - '0';
+    val += direction; // +1 for UP, -1 for DOWN
+
+    // Apply specific bounds per digit position in "HHHMM" format (index 2 is 'H')
+    switch (pos) {
+        case 0: // Hours tens (0-2)
+            if (val > 2) val = 0;
+            if (val < 0) val = 2;
+            break;
+        case 1: // Hours units (0-9, or 0-3 if tens is 2)
+            if (time_str[0] == '2' && val > 3) val = 0;
+            else {
+                if (val > 9) val = 0;
+                if (val < 0) val = 9;
+            }
+            break;
+        case 3: // Minutes tens (0-5)
+            if (val > 5) val = 0;
+            if (val < 0) val = 5;
+            break;
+        case 4: // Minutes units (0-9)
+            if (val > 9) val = 0;
+            if (val < 0) val = 9;
+            break;
+        default:
+            return; // Index 2 is 'H', do nothing
+    }
+
+    time_str[pos] = '0' + val;
+}
+
+void small_blink(){
+    sel_arrow = 1;menu_render();
+    k_msleep(250);
+    sel_arrow = 0;menu_render();
+    k_msleep(250);
+}
+
+void menu_process_event_editing(MenuEvent event, char *time_str) {
+    switch (event) {
+        case EVENT_UP:
+            modify_active_digit(time_str, app_state.edit_digit_pos, 1);
+            break;
+            
+        case EVENT_DOWN:
+            modify_active_digit(time_str, app_state.edit_digit_pos, -1);
+            break;
+            
+        case EVENT_SELECT:
+            // Move to next editable digit, skipping index 2 ('H')
+            app_state.edit_digit_pos++;
+            small_blink();
+            if (app_state.edit_digit_pos == 2) {
+                app_state.edit_digit_pos++; // Skip 'H'
+            }
+            
+            // If we've passed the last digit (index 4), finish editing and save
+            if (app_state.edit_digit_pos > 4) {
+                app_state.is_editing = false;
+                for (int i=0; i<2; i++) {
+                small_blink();
+                }
+            }
+            break;
+        default:
+            break;
+    }
+}
+
+ 

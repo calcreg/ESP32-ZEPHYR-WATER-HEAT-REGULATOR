@@ -7,8 +7,14 @@
 #include "menu.h"
 #include "wifi.h"
 #include "state.h"
+#include "menu_data.h"
+
+/* Define stack size and thread priority for pad-handling thread*/
+#define STACK_SIZE 1024
+#define PRIORITY1 0
 
 extern void refresh_local_time(void);
+extern const Screen *current_screen;
 
 static const struct gpio_dt_spec led0 = GPIO_DT_SPEC_GET(DT_ALIAS(my_led0), gpios);
 /* Fetch pin specs directly from device tree aliases */
@@ -38,6 +44,36 @@ int init_buttons(void) {
     return 0;
 }
 
+static void Gpio_pin_get(const struct gpio_dt_spec *btn, MenuEvent event){
+ 	/* Since they are configured with GPIO_ACTIVE_LOW, 
+           gpio_pin_get_dt returns 1 when pressed, 0 when released. */
+              if (gpio_pin_get_dt(btn) == 1) {
+                  k_msleep(100); // Debounce
+                  while (gpio_pin_get_dt(btn) == 1) k_msleep(10); /*Wait till btn is relaxed*/
+                  menu_process_event(event);
+                  menu_render();
+	       }
+	 }
+/* Pad_Handler_Thread: Waits 1ms and toggles state1 */
+void Pad_Handler_thread_entry(void *p1, void *p2, void *p3)
+{
+    ARG_UNUSED(p1);
+    ARG_UNUSED(p2);
+    ARG_UNUSED(p3);
+
+    while (1) {
+        Gpio_pin_get(&btn_up,EVENT_UP);
+        Gpio_pin_get(&btn_down,EVENT_DOWN);
+        Gpio_pin_get(&btn_select,EVENT_SELECT);
+        Gpio_pin_get(&btn_back,EVENT_BACK);
+        k_msleep(200);
+    }
+}
+
+/* Statically define and initialize the threads */
+K_THREAD_DEFINE(Pad_Handler, STACK_SIZE, Pad_Handler_thread_entry, NULL, NULL, NULL,
+                PRIORITY1, 0, 0);
+
 int main(void)
 {
     int ret;
@@ -53,7 +89,6 @@ int main(void)
     if (ret < 0) {
         return 0;
     }
-
 
     LOG_INF("Starting Hot-Water Controller Application...");
 
@@ -112,42 +147,12 @@ int main(void)
         // Change the state of the pin and print
         state = !state;
         // Set pin state
-        ret = gpio_pin_set_dt(&led0, state);
-        if (ret < 0) {
-            return 0;
+        gpio_pin_set_dt(&led0, state);
+        if (ctn %60 == 0 ) {
+            refresh_local_time();
+            if (strcmp(current_screen->id, "D0") == 0) 
+                menu_render();
         }
-
-        /* Since they are configured with GPIO_ACTIVE_LOW, 
-           gpio_pin_get_dt returns 1 when pressed, 0 when released. */
-        if (gpio_pin_get_dt(&btn_up) == 1) {
-            menu_process_event(EVENT_UP);
-            menu_render();
-            k_msleep(200); // Debounce
-        }
-
-        if (gpio_pin_get_dt(&btn_down) == 1) {
-            menu_process_event(EVENT_DOWN);
-            menu_render();
-            k_msleep(200);
-        }
-
-        if (gpio_pin_get_dt(&btn_select) == 1) {
-            menu_process_event(EVENT_SELECT);
-            menu_render();
-            k_msleep(200);
-        }
-
-        if (gpio_pin_get_dt(&btn_back) == 1) {
-            menu_process_event(EVENT_BACK);
-            menu_render();
-            k_msleep(200);
-        }
-
-        //snprintf(strbuf, sizeof(strbuf), "LED is %s", (state == 1 ? "ON " : "OFF"));
-        //fbprint(15, 3, strbuf);
-        //Faire la boucle d'attente d'appuie sur un bouton dans un autre thread
-        // Pour que la LED clignote normalement versus detection du bouton OK.
-        k_sleep(K_MSEC(500));
-        if (ctn %120 == 0) {refresh_local_time();menu_render();}
+    k_sleep(K_MSEC(1000));
     }
 }
