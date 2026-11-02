@@ -38,7 +38,7 @@ static const MenuItem items_m0_0[] = {
     { .label = "MAX: " },
     { .label = "MIN: " },
     { .label = "ACTUELLE: " },
-    { .label = "T.CIBLE: " }
+    { .label = "T.CIBLE: " , .strPtr = app_state.TempTarget, .target_action = cb_set_target_temp}
 };
 
 /* M0_1: CHAUFFER */
@@ -118,12 +118,21 @@ void cb_set_regulation(void) {
 
 void cb_set_clock_time(void){}
 void cb_set_datetime(void){}
-void cb_set_target_temp(void){}
+
+void cb_set_target_temp(void){
+    /*Reset editing state and position of the cursor*/
+    app_state.is_editing = true;
+    app_state.edit_what = 1; /*For TempTarget*/
+    app_state.edit_digit_pos = 0;
+    app_state.edit_lastdigit_pos = 1; /*0 and 1*/
+}
 
 void cb_set_Time(){
     /*Reset editing state and position of the cursor*/
     app_state.is_editing = true;
+    app_state.edit_what = 0; /*For Time*/
     app_state.edit_digit_pos = 0;
+    app_state.edit_lastdigit_pos = 4; /*0,1,3,4*/
 }
 
 

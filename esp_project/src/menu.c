@@ -11,6 +11,7 @@ extern uint8_t fb[];
 extern uint8_t set_addr[];
 extern void pcd8544_send(const uint8_t *data, size_t len, bool is_data);
 void menu_process_event_editing(MenuEvent event, char *time_str);
+void modify_active_digit_2digitvalue(char *val_str, int pos, int direction);
 
 const Screen *current_screen = &screen_d0;
 static const Screen *parent_screen = &screen_d0;
@@ -182,6 +183,22 @@ void modify_active_digit(char *time_str, int pos, int direction) {
     time_str[pos] = '0' + val;
 }
 
+/* For editing Time and Date --------------*/
+void modify_active_digit_2digitValue(char *val_str, int pos, int direction) {
+    if (!val_str) return;
+    
+    char c = val_str[pos];
+    if (c == '-') c = '0'; /*Start from scratch*/
+    if (c < '0' || c > '9') return; // Safety check
+
+    int val = c - '0';
+    val += direction; // +1 for UP, -1 for DOWN
+    if (val > 9) val = 0;
+    if (val < 0) val = 9;
+
+    val_str[pos] = '0' + val;
+}
+
 void small_blink(){
     sel_arrow = 1;menu_render();
     k_msleep(250);
@@ -189,30 +206,33 @@ void small_blink(){
     k_msleep(250);
 }
 
-void menu_process_event_editing(MenuEvent event, char *time_str) {
+void menu_process_event_editing(MenuEvent event, char *val_str) {
     switch (event) {
         case EVENT_UP:
-            modify_active_digit(time_str, app_state.edit_digit_pos, 1);
+            if (app_state.edit_what == 0) modify_active_digit(val_str, app_state.edit_digit_pos, 1);
+            else if (app_state.edit_what == 1) modify_active_digit_2digitValue(val_str, app_state.edit_digit_pos, 1);
             break;
             
         case EVENT_DOWN:
-            modify_active_digit(time_str, app_state.edit_digit_pos, -1);
+            if (app_state.edit_what == 0) modify_active_digit(val_str, app_state.edit_digit_pos, -1);
+            else if (app_state.edit_what == 1) modify_active_digit_2digitValue(val_str, app_state.edit_digit_pos, 1);
             break;
             
         case EVENT_SELECT:
             // Move to next editable digit, skipping index 2 ('H')
             app_state.edit_digit_pos++;
             small_blink();
-            if (app_state.edit_digit_pos == 2) {
-                app_state.edit_digit_pos++; // Skip 'H'
-            }
-            
             // If we've passed the last digit (index 4), finish editing and save
-            if (app_state.edit_digit_pos > 4) {
+            if (app_state.edit_digit_pos > app_state.edit_lastdigit_pos) {
                 app_state.is_editing = false;
                 for (int i=0; i<2; i++) {
                 small_blink();
+                break;
                 }
+            }
+            /*Here we handle the case 'H' in Time editing*/
+            if (app_state.edit_digit_pos == 2) {
+                app_state.edit_digit_pos++; // Skip 'H'
             }
             break;
         default:

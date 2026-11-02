@@ -7,7 +7,7 @@
 typedef struct {
     /* Time & Date (populated by SNTP or manual setting) */
     char CurrentTime[16];   /* e.g., "22H30" */
-    char CurrentDate[16];   /* e.g., "29/10/2026" */
+    char CurrentDate[36];   /* 16 should be enough but generates warning. e.g., "29/10/2026" */
 
     /* Temperatures only ASCII Values to display*/
     char TempCurrently[8]; //Actual Temp
@@ -29,6 +29,8 @@ typedef struct {
     /*For editing Time and Date*/
     bool is_editing;        // True if currently editing a time string
     int  edit_digit_pos;    // Current active character index (0, 1, 3, or 4)
+    int edit_lastdigit_pos; /*4(0,1,3,4) for Time, 1(0,1) for TempTarget*/
+    int edit_what;          /*0=Time(17H30), 1=TempTarget(65°C)*/
     char *editing_target_ptr; // Pointer to the char variable in edition
 } AppState;
 
