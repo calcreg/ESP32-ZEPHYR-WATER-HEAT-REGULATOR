@@ -1,8 +1,12 @@
 #include <time.h>
 #include "state.h"
-#include <zephyr/posix/time.h> // Depending on Zephyr includes, or standard <time.h>
+//#include <zephyr/posix/time.h> // Depending on Zephyr includes, or standard <time.h>
 #include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
+#include <zephyr/logging/log.h>
 
+LOG_MODULE_REGISTER(app_time, LOG_LEVEL_INF);
 
 void update_system_time_from_sntp(time_t sntp_epoch_seconds) {
     struct timespec ts;
@@ -53,7 +57,10 @@ void refresh_local_time(void) {
     time(&now);
     
     /* Get raw UTC calendar time struct safely */
-    if (!gmtime_r(&now, &utc_tm)) return;
+    if (!gmtime_r(&now, &utc_tm)) {
+        LOG_INF("Cannot get raw calendar time");
+        return;
+    }
 
     /* Determine seasonal offset dynamically (+2h in summer, +1h in winter) */
     int offset_hours = is_france_dst(&utc_tm) ? 2 : 1;
@@ -75,4 +82,76 @@ void refresh_local_time(void) {
     /* Store the adjusted local date (e.g., "02/11/2026") */
     snprintf(app_state.CurrentDate, sizeof(app_state.CurrentDate), "%02d/%02d/%04d", 
              local_tm.tm_mday, local_tm.tm_mon + 1, local_tm.tm_year + 1900);
+}
+
+/*In case Wifi cannot retrieve time from sntp, we'll do it manually 
+and integrate new values here*/
+void update_system_time_from_strings(int TimeOrDate) {
+    time_t now;
+    struct tm local_tm = {0};
+  
+    /* Read the current system time maintained by the ESP32 (UTC from SNTP) */
+    time(&now);
+    
+    /* Get raw UTC calendar time struct safely */
+    if (!gmtime_r(&now, &local_tm)) {
+        LOG_INF("Cannot get raw calendar time");
+        return;
+    }
+
+    int hour = 0, minute = 0;
+    int day = 1, month = 1, year = 2026;
+    
+    /* 1. Parse CurrentTime (supports formats like "14H32" or "14:32") */
+    /* sscanf crash esp32 we need another way*/
+    if (TimeOrDate == 0) {
+        hour   = (app_state.CurrentTime[0] - '0') * 10 + (app_state.CurrentTime[1] - '0');
+        minute = (app_state.CurrentTime[3] - '0') * 10 + (app_state.CurrentTime[4] - '0');
+        if (hour < 0 || hour > 23 || minute < 0 || minute > 59 ){
+            LOG_INF("Error in retrieval Time : %2dH%2d", hour, minute);
+            return;
+        }
+        /* 3. Populate a tm struct with the local French time */
+        local_tm.tm_hour = hour;
+        local_tm.tm_min = minute;
+        local_tm.tm_sec = 0;
+    }else{
+        day   = (app_state.CurrentDate[0] - '0') * 10 + (app_state.CurrentDate[1] - '0');
+        month = (app_state.CurrentDate[3] - '0') * 10 + (app_state.CurrentDate[4] - '0');
+        year  = (app_state.CurrentDate[6] - '0') * 1000 + 
+            (app_state.CurrentDate[7] - '0') * 100 + 
+            (app_state.CurrentDate[8] - '0') * 10 + 
+            (app_state.CurrentDate[9] - '0');
+         /* Validate ranges to prevent calendar faults */
+        if (day < 1 || day > 31 || month < 1 || month > 12 || year < 2020) {
+            LOG_INF("Error in retrieval Date : %2d/%2d/%4d",day,month,year);
+            return;
+        }
+        local_tm.tm_mday = day;
+        local_tm.tm_mon = month - 1;     // tm_mon is 0-11
+        local_tm.tm_year = year - 1900;  // tm_year is years since 1900
+        local_tm.tm_isdst = -1;
+    }
+    //LOG_INF("Error in retrieval date : %2dH%2d %2d/%2d/%4d", hour, minute, day,month,year);
+
+    /* 4. Determine the active French offset for this date (+2h summer, +1h winter) */
+    int offset_hours = is_france_dst(&local_tm) ? 2 : 1;
+
+    /* 5. Convert local time to UTC by subtracting the offset */
+    local_tm.tm_hour -= offset_hours;
+
+    /* 
+     * 6. Convert the adjusted tm struct into UTC epoch seconds (time_t).
+     * mktime normalizes any hour rollovers (e.g. if subtracting offset crossed midnight).
+     */
+    time_t utc_epoch = mktime(&local_tm);
+    if (utc_epoch != (time_t)-1) {
+        struct timespec ts;
+        ts.tv_sec = utc_epoch;
+        ts.tv_nsec = 0;
+
+        /* Apply to the ESP32 system clock (POSIX CLOCK_REALTIME) */
+        clock_settime(CLOCK_REALTIME, &ts);
+        LOG_INF("Clock_settime done");
+    }
 }

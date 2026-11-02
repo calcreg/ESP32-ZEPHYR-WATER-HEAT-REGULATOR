@@ -116,7 +116,13 @@ void cb_set_regulation(void) {
     menu_render();
 }
 
-void cb_set_clock_time(void){}
+void cb_set_clock_time(void){
+    app_state.is_editing = true;
+    app_state.edit_what = 2; /*For Time*/
+    app_state.edit_digit_pos = 0;
+    app_state.edit_lastdigit_pos = 4; /*0,1,3,4*/
+}
+
 void cb_set_datetime(void){}
 
 void cb_set_target_temp(void){
@@ -130,7 +136,7 @@ void cb_set_target_temp(void){
 void cb_set_Time(){
     /*Reset editing state and position of the cursor*/
     app_state.is_editing = true;
-    app_state.edit_what = 0; /*For Time*/
+    app_state.edit_what = 0; /*For Heater Time Schedule*/
     app_state.edit_digit_pos = 0;
     app_state.edit_lastdigit_pos = 4; /*0,1,3,4*/
 }

@@ -12,6 +12,7 @@ extern uint8_t set_addr[];
 extern void pcd8544_send(const uint8_t *data, size_t len, bool is_data);
 void menu_process_event_editing(MenuEvent event, char *time_str);
 void modify_active_digit_2digitvalue(char *val_str, int pos, int direction);
+void update_system_time_from_strings(int TimeOrDate);
 
 const Screen *current_screen = &screen_d0;
 static const Screen *parent_screen = &screen_d0;
@@ -209,13 +210,13 @@ void small_blink(){
 void menu_process_event_editing(MenuEvent event, char *val_str) {
     switch (event) {
         case EVENT_UP:
-            if (app_state.edit_what == 0) modify_active_digit(val_str, app_state.edit_digit_pos, 1);
+            if (app_state.edit_what == 0 || app_state.edit_what == 2) modify_active_digit(val_str, app_state.edit_digit_pos, 1);
             else if (app_state.edit_what == 1) modify_active_digit_2digitValue(val_str, app_state.edit_digit_pos, 1);
             break;
             
         case EVENT_DOWN:
-            if (app_state.edit_what == 0) modify_active_digit(val_str, app_state.edit_digit_pos, -1);
-            else if (app_state.edit_what == 1) modify_active_digit_2digitValue(val_str, app_state.edit_digit_pos, 1);
+            if (app_state.edit_what == 0 || app_state.edit_what == 2) modify_active_digit(val_str, app_state.edit_digit_pos, -1);
+            else if (app_state.edit_what == 1) modify_active_digit_2digitValue(val_str, app_state.edit_digit_pos, -1);
             break;
             
         case EVENT_SELECT:
@@ -224,11 +225,17 @@ void menu_process_event_editing(MenuEvent event, char *val_str) {
             small_blink();
             // If we've passed the last digit (index 4), finish editing and save
             if (app_state.edit_digit_pos > app_state.edit_lastdigit_pos) {
-                app_state.is_editing = false;
                 for (int i=0; i<2; i++) {
-                small_blink();
-                break;
+                    small_blink();
                 }
+                app_state.is_editing = false;
+                if (app_state.edit_what == 2){
+                    /*Force this time into ESP32 system clock*/
+                    printk("DEBUG: Calling update_system_time_from_strings...\n");
+                    update_system_time_from_strings(0);//TimeOrDate = 0(Time), 1(Date)
+                    printk("DEBUG: Time update complete.\n");
+                }
+                break;
             }
             /*Here we handle the case 'H' in Time editing*/
             if (app_state.edit_digit_pos == 2) {
