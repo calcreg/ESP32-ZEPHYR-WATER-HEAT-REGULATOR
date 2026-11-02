@@ -12,6 +12,7 @@ extern uint8_t set_addr[];
 extern void pcd8544_send(const uint8_t *data, size_t len, bool is_data);
 void menu_process_event_editing(MenuEvent event, char *time_str);
 void modify_active_digit_2digitvalue(char *val_str, int pos, int direction);
+void modify_active_digit_date(char *date_str, int pos, int delta);
 void update_system_time_from_strings(int TimeOrDate);
 
 const Screen *current_screen = &screen_d0;
@@ -145,7 +146,7 @@ void menu_process_event(MenuEvent event) {
 }
 
 
-/* For editing Time and Date --------------*/
+/* For editing Time --------------*/
 void modify_active_digit(char *time_str, int pos, int direction) {
     if (!time_str) return;
     
@@ -184,7 +185,72 @@ void modify_active_digit(char *time_str, int pos, int direction) {
     time_str[pos] = '0' + val;
 }
 
-/* For editing Time and Date --------------*/
+/* For editing date--------------*/
+void modify_active_digit_date(char *date_str, int pos, int delta) {
+    int val = date_str[pos] - '0';
+    val += delta;
+
+    switch (pos) {
+        case 0: { // Day tens (0-3)
+            if (val > 3) val = 0;
+            if (val < 0) val = 3;
+            
+            // Constraint: if tens becomes 3, units cannot exceed 1 (max day 31)
+            int units = date_str[1] - '0';
+            if (val == 3 && units > 1) {
+                date_str[1] = '1';
+            }
+            break;
+        }
+        case 1: { // Day units (0-9)
+            int tens = date_str[0] - '0';
+            int max_unit = (tens == 3) ? 1 : 9;
+            int min_unit = (tens == 0) ? 1 : 0; // Prevent day "00"
+
+            if (val > max_unit) val = min_unit;
+            if (val < min_unit) val = max_unit;
+            break;
+        }
+        case 3: { // Month tens (0-1)
+            if (val > 1) val = 0;
+            if (val < 0) val = 1;
+
+            // Constraint: if tens becomes 1, units cannot exceed 2 (max month 12)
+            int units = date_str[4] - '0';
+            if (val == 1 && units > 2) {
+                date_str[4] = '2';
+            }
+            break;
+        }
+case 4: { // Month units (0-9)
+            int tens = date_str[3] - '0';
+            
+            // If tens is 0, valid months are 01-09 (min unit 1, max unit 9)
+            // If tens is 1, valid months are 10-12 (min unit 0, max unit 2)
+            int min_unit = (tens == 0) ? 1 : 0;
+            int max_unit = (tens == 0) ? 9 : 2;
+
+            if (val > max_unit) val = min_unit;
+            if (val < min_unit) val = max_unit;
+            break;
+        }
+        case 6: // Year thousands (0-9)
+             if (val != 2) val = 2;
+             break;
+        case 7: // Year hundreds (0-9)
+        case 8: // Year tens (0-9)
+        case 9: // Year units (0-9)
+            if (val > 9) val = 0;
+            if (val < 0) val = 9;
+            break;
+        default:
+            return; // Indices 2 and 5 are '/' separators, do nothing
+    }
+
+    date_str[pos] = '0' + val;
+}
+
+/* For editing Values --------------*/
 void modify_active_digit_2digitValue(char *val_str, int pos, int direction) {
     if (!val_str) return;
     
@@ -212,11 +278,13 @@ void menu_process_event_editing(MenuEvent event, char *val_str) {
         case EVENT_UP:
             if (app_state.edit_what == 0 || app_state.edit_what == 2) modify_active_digit(val_str, app_state.edit_digit_pos, 1);
             else if (app_state.edit_what == 1) modify_active_digit_2digitValue(val_str, app_state.edit_digit_pos, 1);
+            else if (app_state.edit_what == 3 )modify_active_digit_date(val_str, app_state.edit_digit_pos, 1);
             break;
             
         case EVENT_DOWN:
             if (app_state.edit_what == 0 || app_state.edit_what == 2) modify_active_digit(val_str, app_state.edit_digit_pos, -1);
             else if (app_state.edit_what == 1) modify_active_digit_2digitValue(val_str, app_state.edit_digit_pos, -1);
+            else if (app_state.edit_what == 3 )modify_active_digit_date(val_str, app_state.edit_digit_pos, -1);
             break;
             
         case EVENT_SELECT:
@@ -231,15 +299,17 @@ void menu_process_event_editing(MenuEvent event, char *val_str) {
                 app_state.is_editing = false;
                 if (app_state.edit_what == 2){
                     /*Force this time into ESP32 system clock*/
-                    printk("DEBUG: Calling update_system_time_from_strings...\n");
                     update_system_time_from_strings(0);//TimeOrDate = 0(Time), 1(Date)
-                    printk("DEBUG: Time update complete.\n");
                 }
+                 if (app_state.edit_what == 3){
+                    /*Force this date into ESP32 system clock*/
+                    update_system_time_from_strings(1);//TimeOrDate = 0(Time), 1(Date)
+                }               
                 break;
             }
             /*Here we handle the case 'H' in Time editing*/
-            if (app_state.edit_digit_pos == 2) {
-                app_state.edit_digit_pos++; // Skip 'H'
+            if (app_state.edit_digit_pos == 2 || app_state.edit_digit_pos == 5) {
+                app_state.edit_digit_pos++; // Skip 'H' or '/' in date
             }
             break;
         default:

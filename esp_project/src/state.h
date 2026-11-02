@@ -30,7 +30,7 @@ typedef struct {
     bool is_editing;        // True if currently editing a time string
     int  edit_digit_pos;    // Current active character index (0, 1, 3, or 4)
     int edit_lastdigit_pos; /*4(0,1,3,4) for Time, 1(0,1) for TempTarget*/
-    int edit_what;          /*0=TimeSchedule(17H30), 1=TempTarget(65°C), 2=TimeClock(17H00)*/
+    int edit_what;          /*0=TimeSchedule(17H30), 1=TempTarget(65°C), 2=TimeClock(17H00), 3=Date(02/11/2026)*/
     char *editing_target_ptr; // Pointer to the char variable in edition
 } AppState;
 

@@ -13,7 +13,7 @@ void cb_set_duration_1H30(void);
 void cb_set_duration_2H00(void);
 void cb_set_regulation(void);
 void cb_set_clock_time(void);
-void cb_set_datetime(void);
+void cb_set_date(void);
 void cb_set_target_temp(void);
 void cb_set_Time(void);
 
@@ -54,7 +54,7 @@ static const MenuItem items_m0_1[] = {
 static const MenuItem items_m0_2[] = {
     { .label = "REGUL: ", .strPtr = app_state.RegulMode, .target_action = cb_set_regulation  },
     { .label = "HEURE: ", .strPtr = app_state.CurrentTime, .target_action = cb_set_clock_time },
-    { .label = "DT:", .strPtr = app_state.CurrentDate, .target_action = cb_set_datetime },
+    { .label = "DT:", .strPtr = app_state.CurrentDate, .target_action = cb_set_date},
     { .label = "HORAIRES CH.", .target_screen = "M0_2_0" },
     { .label = "T.CIBLE: ", .strPtr = app_state.TempTarget, .target_action = cb_set_target_temp  }
 };
@@ -123,7 +123,12 @@ void cb_set_clock_time(void){
     app_state.edit_lastdigit_pos = 4; /*0,1,3,4*/
 }
 
-void cb_set_datetime(void){}
+void cb_set_date(void){
+   app_state.is_editing = true;
+    app_state.edit_what = 3; /*For Date*/
+    app_state.edit_digit_pos = 0;
+    app_state.edit_lastdigit_pos = 9; /*0,1,3,4,6,7,8,9*/
+}
 
 void cb_set_target_temp(void){
     /*Reset editing state and position of the cursor*/
