@@ -126,7 +126,9 @@ int main(void)
         k_sleep(K_SECONDS(1));
         /* Fetch time from internet */
         if (fetch_internet_time_and_date(time_str, sizeof(time_str), date_str, sizeof(date_str)) == 0) {
-            LOG_INF("Time successfully synchronized: %s, %s", date_str, time_str);
+            LOG_INF("Time UTC successfully synchronized: %s, %s", date_str, time_str);
+            refresh_local_time();
+            LOG_INF("Set to local Time Zone.");
             menu_render();
         }else{
             snprintf(app_state.CurrentTime, sizeof(app_state.CurrentTime), "--H--");
