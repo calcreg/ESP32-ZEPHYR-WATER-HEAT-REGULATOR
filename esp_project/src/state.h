@@ -20,10 +20,9 @@ typedef struct {
     char TimeStopHeat1[8];   /* e.g., "08:00" */
     char TimeStartHeat2[8];  /* e.g., "18:00" */
     char TimeStopHeat2[8];   /* e.g., "21:00" */
-    /*Heating State : ARRET / EN CHAUFFE / REGULATION*/
-    char State[16];
-    /*Regulation Mode ON/FULLON/OFF*/
-    char RegulMode[16];
+    char GlobalState[16];/*Heating Global State : ARRET / EN CHAUFFE / REGULATION*/
+    char State[16];/*Current State of the Heater ON/OFF*/
+    char RegulMode[16]; /*Regulation Mode ON/FULLON/OFF*/
     char HeatDuration[8];   /*For immediate heat*/
     char CHTitle[16];       /*Immediat Heat Title, example : CH.:1H30*/
     /*For editing Time and Date*/
@@ -32,6 +31,7 @@ typedef struct {
     int edit_lastdigit_pos; /*4(0,1,3,4) for Time, 1(0,1) for TempTarget*/
     int edit_what;          /*0=TimeSchedule(17H30), 1=TempTarget(65°C), 2=TimeClock(17H00), 3=Date(02/11/2026)*/
     char *editing_target_ptr; // Pointer to the char variable in edition
+    bool adcReady;
 } AppState;
 
 /* Expose a global reference to the application state */

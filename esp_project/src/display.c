@@ -122,7 +122,7 @@ void draw_box(){
     /* Draw a box border */
     for (int x = 0; x < DISPLAY_WIDTH; x++) {
         //fb[x] |= 0x01;                       // Top edge
-        fb[5*DISPLAY_WIDTH + x] |= 0x80;    // Bottom edge
+        if (x < 12 || x > DISPLAY_WIDTH - 12) fb[5*DISPLAY_WIDTH + x] |= 0x80;    // Bottom edge
     }
     for (int p = 1; p < 6; p++) {
         fb[p * DISPLAY_WIDTH] = 0xFF;         // Left edge

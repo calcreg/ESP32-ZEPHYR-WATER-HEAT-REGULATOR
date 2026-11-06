@@ -4,7 +4,8 @@
 #include "state.h"
 #include <stdio.h>
 
-extern void menu_render(); /*In menu.c*/
+//extern void menu_render(); /*In menu.c*/
+extern void safe_menu_render();
 /* Forward declare your callback functions */
 void cb_set_duration_0H30(void);
 void cb_set_duration_0H45(void);
@@ -19,11 +20,11 @@ void cb_set_Time(void);
 
 /* D0: Front Page */
 static const MenuItem items_d0[] = {
-    { .label = "    ", .strPtr = app_state.TempMax },
+    { .label = ""},
     { .label = "    ", .strPtr = app_state.CurrentTime },
     { .label = " ", .strPtr = app_state.CurrentDate },
-    { .label = ""},
-    { .label = " ", .strPtr = app_state.State }
+    { .label = "    ", .strPtr = app_state.TempMax },
+    { .label = " ", .strPtr = app_state.GlobalState }
 };
 
 /* M0: MENU */
@@ -88,7 +89,8 @@ const Screen *get_screen_by_id(const char *id) {
 static void apply_duration(const char *dur) {
     snprintf(app_state.HeatDuration, sizeof(app_state.HeatDuration), "%s", dur);
     snprintf(app_state.CHTitle, sizeof(app_state.CHTitle), "CH.: %s", dur);
-    menu_render();
+    //menu_render();
+    safe_menu_render();
 }
 
 /* 2. Tiny wrapper functions matching the void (*)(void) menu signature */
@@ -113,7 +115,8 @@ void cb_set_regulation(void) {
         snprintf(app_state.State, sizeof(app_state.State), " REGUL.: ON");
     }
     
-    menu_render();
+    //menu_render();
+    safe_menu_render();
 }
 
 void cb_set_clock_time(void){

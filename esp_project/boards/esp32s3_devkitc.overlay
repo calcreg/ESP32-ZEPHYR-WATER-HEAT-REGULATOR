@@ -1,45 +1,47 @@
 / {
     aliases {
         my-led0 = &led0;
+        my-heater = &heat;
+        btn-up = &button_up;
+        btn-down = &button_dwn;
+        btn-select = &button_sel;
+        btn-back = &button_bck;
     };
 
     leds {
         compatible = "gpio-leds";
+        
         led0: d23 {
             gpios = <&gpio0 23 GPIO_ACTIVE_HIGH>;
         };
-    };
-};
-
-/ {
-    aliases {
-        btn-up = &button_17;
-        btn-down = &button_16;
-        btn-select = &button_4;
+        heat: d2 {
+            gpios = <&gpio0 2 GPIO_ACTIVE_HIGH>;
+        };
     };
 
     gpio_keys {
         compatible = "gpio-keys";
         
-        button_17: button_17 {
+        button_up: button_up {
             gpios = <&gpio0 17 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
-            label = "Up Button G17";
+            label = "Up Button";
         };
         
-        button_16: button_16 {
+        button_dwn: button_dwn {
             gpios = <&gpio0 16 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
-            label = "Down Button G16";
+            label = "Down Button";
         };
         
-        button_4: button_4 {
+        button_sel: button_sel {
             gpios = <&gpio0 4 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
-            label = "Select Button G4";
+            label = "Select Button";
+        };
+
+        button_bck: button_bck {
+            gpios = <&gpio0 15 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+            label = "Back Button";
         };
     };
-};
-
-/ {
-    /* No custom nodes required */
 };
 
 &spi2 {
@@ -66,8 +68,21 @@
     };
 };
 
-/*Enable wifi*/
+/* Enable wifi */
 &wifi {
     status = "okay";
 };
 
+&adc0 {
+    status = "okay";
+    #address-cells = <1>;
+    #size-cells = <0>;
+
+    channel@0 {
+        reg = <0>;
+        zephyr,gain = "ADC_GAIN_1_2";          /* Sets 6 dB attenuation (~0 to 1.5V range) */
+        zephyr,reference = "ADC_REF_INTERNAL";
+        zephyr,acquisition-time = <ADC_ACQ_TIME_DEFAULT>;
+        zephyr,resolution = <12>;              /* 12-bit resolution (0–4095) */
+    };
+};

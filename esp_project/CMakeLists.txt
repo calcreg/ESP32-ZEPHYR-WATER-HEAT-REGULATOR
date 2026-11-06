@@ -16,6 +16,7 @@ target_sources(app PRIVATE
     src/wifi.c
     src/state.c
     src/time.c
+    src/adc.c
     )
 
 

@@ -6,6 +6,8 @@
 #include "menu_data.h"
 #include "state.h"
 
+extern void safe_menu_render();
+
 /* External references from display.c */
 extern uint8_t fb[];
 extern uint8_t set_addr[];
@@ -267,9 +269,11 @@ void modify_active_digit_2digitValue(char *val_str, int pos, int direction) {
 }
 
 void small_blink(){
-    sel_arrow = 1;menu_render();
+    sel_arrow = 1;//menu_render();
+    safe_menu_render();
     k_msleep(250);
-    sel_arrow = 0;menu_render();
+    sel_arrow = 0;//menu_render();
+    safe_menu_render();
     k_msleep(250);
 }
 

@@ -3,20 +3,27 @@
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/logging/log.h>
 #include <string.h>
+#include <stdbool.h>
 #include "display.h"
 #include "menu.h"
 #include "wifi.h"
 #include "state.h"
 #include "menu_data.h"
 
+
 /* Define stack size and thread priority for pad-handling thread*/
 #define STACK_SIZE 1024
-#define PRIORITY1 0
+#define PRIORITY1 7 //buttons' state Thread
+#define PRIORITY2 7 //heater Thread
 
 extern void refresh_local_time(void);
 extern const Screen *current_screen;
+extern float read_ntc_voltage(void);
+extern int adc_init(void);
+extern float GetTemperature(float V_ADC);
 
 static const struct gpio_dt_spec led0 = GPIO_DT_SPEC_GET(DT_ALIAS(my_led0), gpios);
+static const struct gpio_dt_spec heater = GPIO_DT_SPEC_GET(DT_ALIAS(my_heater), gpios);
 /* Fetch pin specs directly from device tree aliases */
 static const struct gpio_dt_spec btn_up = GPIO_DT_SPEC_GET(DT_ALIAS(btn_up), gpios);
 static const struct gpio_dt_spec btn_down = GPIO_DT_SPEC_GET(DT_ALIAS(btn_down), gpios);
@@ -25,6 +32,19 @@ static const struct gpio_dt_spec btn_back= GPIO_DT_SPEC_GET(DT_ALIAS(btn_back), 
 
 LOG_MODULE_REGISTER(app_main, LOG_LEVEL_INF);
 
+/* Define a mutex for the LCD/SPI bus */
+K_MUTEX_DEFINE(lcd_lock);
+
+/* Thread-safe wrapper for rendering */
+void safe_menu_render(void) {
+    /* Try to acquire the mutex with a timeout (e.g., 100ms) to avoid permanent deadlocks */
+    if (k_mutex_lock(&lcd_lock, K_MSEC(100)) == 0) {
+        menu_render();
+        k_mutex_unlock(&lcd_lock);
+    } else {
+        LOG_WRN("Failed to acquire LCD mutex for rendering");
+    }
+}
 
 int init_buttons(void) {
     if (!device_is_ready(btn_up.port) || 
@@ -51,7 +71,8 @@ static void Gpio_pin_get(const struct gpio_dt_spec *btn, MenuEvent event){
                   k_msleep(100); // Debounce
                   while (gpio_pin_get_dt(btn) == 1) k_msleep(10); /*Wait till btn is relaxed*/
                   menu_process_event(event);
-                  menu_render();
+                  //menu_render();
+                  safe_menu_render();
 	       }
 	 }
 /* Pad_Handler_Thread: Waits 1ms and toggles state1 */
@@ -73,6 +94,53 @@ void Pad_Handler_thread_entry(void *p1, void *p2, void *p3)
 /* Statically define and initialize the threads */
 K_THREAD_DEFINE(Pad_Handler, STACK_SIZE, Pad_Handler_thread_entry, NULL, NULL, NULL,
                 PRIORITY1, 0, 0);
+/* ---*/
+/* Heater_Thread: Waits 1ms and toggles state1 */
+
+void Heater_thread_entry(void *p1, void *p2, void *p3)
+{
+    ARG_UNUSED(p1);
+    ARG_UNUSED(p2);
+    ARG_UNUSED(p3);
+    int ret;
+
+    // Make sure that the GPIO was initialized
+    if (!gpio_is_ready_dt(&heater)) {
+        LOG_INF("Couldn't initialise heater GPIO 2.");
+    }
+
+    // Set the GPIO as output
+    ret = gpio_pin_configure_dt(&heater, GPIO_OUTPUT);
+    if (ret < 0) {
+        LOG_INF("Couldn't configure heater GPIO 2.");
+    }
+    int state=0;
+    while (1) {
+        if (strcmp(app_state.State, "ON") == 0) {
+            gpio_pin_set_dt(&heater, 1);
+            snprintf(app_state.GlobalState, sizeof(app_state.GlobalState),"EN CHAUFFE");
+        }else{
+            gpio_pin_set_dt(&heater, 0);
+            if  (strcmp(app_state.State, "OFF") == 0) {
+                if  (strcmp(app_state.RegulMode, "ON") == 0) {
+                    snprintf(app_state.GlobalState, sizeof(app_state.GlobalState),"REGULATION");
+                }else snprintf(app_state.GlobalState, sizeof(app_state.GlobalState),"-- ARRET --");
+            }
+        }
+        //menu_render();
+        safe_menu_render();
+        k_msleep(1000);
+        //test:
+        state =!state;
+        if (state == 1) snprintf(app_state.State, sizeof(app_state.State),"ON");
+        else snprintf(app_state.State, sizeof(app_state.State),"OFF");
+    }
+}
+
+// Statically define and initialize the threads
+K_THREAD_DEFINE(Heater, STACK_SIZE, Heater_thread_entry, NULL, NULL, NULL,
+                PRIORITY2, 0, 0);
+
 
 int main(void)
 {
@@ -105,7 +173,8 @@ int main(void)
     menu_init();
 
     /* 3. Perform initial render of the D0 Front Page */
-    menu_render();
+    //menu_render();
+    safe_menu_render();
 
     /* 1. Scan for nearby Wi-Fi networks first (results print via logs, or hook to your menu) */
     //LOG_INF("Scanning for available Wi-Fi networks...");
@@ -117,7 +186,8 @@ int main(void)
 
     LOG_INF("Waiting for network time synchronization...");
     snprintf(app_state.CurrentTime, sizeof(app_state.CurrentTime), "WSNTP");
-    menu_render();
+    //menu_render();
+    safe_menu_render();
     if (wifi_wait_for_ip(K_SECONDS(15)) == 0) {
         char time_str[16];
         char date_str[16];
@@ -129,10 +199,12 @@ int main(void)
             LOG_INF("Time UTC successfully synchronized: %s, %s", date_str, time_str);
             refresh_local_time();
             LOG_INF("Set to local Time Zone.");
-            menu_render();
+            //menu_render();
+            safe_menu_render();
         }else{
             snprintf(app_state.CurrentTime, sizeof(app_state.CurrentTime), "--H--");
-            menu_render();
+            //menu_render();
+            safe_menu_render();
         }
         
         /* Lock down the network immediately after sync to ensure security */
@@ -142,7 +214,17 @@ int main(void)
         disconnect_wifi_securely();
     }
 
-     LOG_INF("System ready. Entering main event loop.");
+    LOG_INF("System ready. Entering main event loop.");
+    
+    ret=adc_init();
+    if (ret <0){
+        LOG_ERR("Couldn't init adc");
+        app_state.adcReady = false;
+    }else{
+        LOG_INF("ADC Initialized and ready");
+        app_state.adcReady = true;
+    }
+    
     int ctn=0;
     while (1) {
         ctn++;
@@ -153,8 +235,20 @@ int main(void)
         if (ctn %60 == 0 ) {
             refresh_local_time();
             if (strcmp(current_screen->id, "D0") == 0) 
-                menu_render();
+                //menu_render();
+                safe_menu_render();
         }
-    k_sleep(K_MSEC(1000));
+        //Read Voltage
+        
+        if (app_state.adcReady == true) {
+            float V_ADC = read_ntc_voltage();
+            float Temp = GetTemperature(V_ADC);
+            // Scale by 10 to keep one decimal place using integers
+            int temp_scaled = (int)(Temp * 10.0f);
+            LOG_INF("Temperature measured is %d.%d °C", temp_scaled / 10, abs(temp_scaled % 10));
+            snprintf (app_state.TempCurrently, sizeof(app_state.TempCurrently),"%2d@C",temp_scaled/10);
+            snprintf (app_state.TempMax, sizeof(app_state.TempMax),"%2d@C",temp_scaled/10);
+        }
+        k_sleep(K_MSEC(1000));
     }
 }
