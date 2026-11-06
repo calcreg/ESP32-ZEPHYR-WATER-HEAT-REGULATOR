@@ -68,7 +68,7 @@ float read_ntc_voltage(void) {
     int32_t avg_mv = sum_mv / valid_samples;
     float val_v = (float)avg_mv / 1000.0f;
     
-    LOG_INF("Averaged Voltage: %d mV", avg_mv);
+    //LOG_INF("Averaged Voltage: %d mV", avg_mv);
     return val_v;
 }
 
