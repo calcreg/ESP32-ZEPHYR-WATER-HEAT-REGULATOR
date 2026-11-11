@@ -31,9 +31,10 @@ void T_Curve_Display(){
     if (t_index < DISPLAY_WIDTH ) max_disp_val = t_index;
     else max_disp_val = DISPLAY_WIDTH ;
     int valid_items = buffer_wrapped ? TMEMSIZE : max_disp_val;
+    int i_start = valid_items > DISPLAY_WIDTH ? valid_items - DISPLAY_WIDTH : 0;
 
     if (valid_items > 2) 
-    for (int i = 0; i < valid_items-1; i++) {
+    for (int i = i_start; i < valid_items-1; i++) {
         int src_index1;
         int src_index2;
         if (buffer_wrapped) {
