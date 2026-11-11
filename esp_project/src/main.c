@@ -9,7 +9,7 @@
 #include "wifi.h"
 #include "state.h"
 #include "menu_data.h"
-
+#include "T_curve.h"
 
 /* Define stack size and thread priority for pad-handling thread*/
 #define STACK_SIZE 1024
@@ -68,7 +68,7 @@ static void Gpio_pin_get(const struct gpio_dt_spec *btn, MenuEvent event){
  	/* Since they are configured with GPIO_ACTIVE_LOW, 
            gpio_pin_get_dt returns 1 when pressed, 0 when released. */
               if (gpio_pin_get_dt(btn) == 1) {
-                  k_msleep(100); // Debounce
+                  k_msleep(50); // Debounce
                   while (gpio_pin_get_dt(btn) == 1) k_msleep(10); /*Wait till btn is relaxed*/
                   menu_process_event(event);
                   //menu_render();
@@ -269,7 +269,7 @@ int main(void)
     }
     
     int ctn=0;
-    int temp_scaled_previous;
+    static int temp_scaled_previous;
     while (1) {
         ctn++;
         // Heartbit Led blinks every 5 secs
@@ -289,11 +289,12 @@ int main(void)
             float Temp = GetTemperature(V_ADC);
             // Scale by 10 to keep one decimal place using integers
             int temp_scaled = (int)(Temp * 10.0f);
+            /*Save value of temperature along time every secs*/
+            if (ctn %10 == 0 ) append_temp_value(temp_scaled);
             /*Handle TempMin, TempMax*/
             static int min_scaled = 0;
             static int max_scaled = 0;
             static bool initialized = false;
-
             // Initialize min/max on the very first reading
             if (!initialized) {
                 min_scaled = temp_scaled;

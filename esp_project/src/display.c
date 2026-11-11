@@ -147,3 +147,51 @@ void fbprint(int x, int y, char* text){
     pcd8544_send(fb, sizeof(fb), true);
 }
 
+
+/*Display curve T=f(t) needed routines*/
+// Helper to draw a single pixel into the paginated framebuffer
+void fb_draw_pixel(int x, int y) {
+    // Bounds check (84 columns x 48 rows)
+    if (x < 0 || x >= DISPLAY_WIDTH || y < 0 || y >= 48) {
+        LOG_ERR("X,Y out of Range");
+        return;
+    }
+
+    int page = y / 8;                // Which of the 6 pages (0 to 5)
+    int bit = y % 8;                 // Which bit within the byte (0 to 7)
+    
+    // Set the corresponding bit in the framebuffer
+    int index = page * DISPLAY_WIDTH + x;
+    if (index >= 0 && index < BUFFER_SIZE) {
+        fb[index] |= (1 << bit);
+    }
+    else LOG_ERR("X,Y out of Range");
+}
+
+// Draw a line from (x1, y1) to (x2, y2) using Bresenham's algorithm
+void fb_draw_line(int x1, int y1, int x2, int y2) {
+    int dx = abs(x2 - x1);
+    int dy = abs(y2 - y1);
+    int sx = (x1 < x2) ? 1 : -1;
+    int sy = (y1 < y2) ? 1 : -1;
+    int err = dx - dy;
+
+    while (true) {
+        fb_draw_pixel(x1, y1);
+
+        if (x1 == x2 && y1 == y2) {
+            break;
+        }
+
+        int e2 = 2 * err;
+        if (e2 > -dy) {
+            err -= dy;
+            x1 += sx;
+        }
+        if (e2 < dx) {
+            err += dx;
+            y1 += sy;
+        }
+    }
+}
+

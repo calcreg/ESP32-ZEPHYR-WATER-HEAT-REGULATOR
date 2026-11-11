@@ -17,6 +17,7 @@ target_sources(app PRIVATE
     src/state.c
     src/time.c
     src/adc.c
+    src/T_curve.c
     )
 
 

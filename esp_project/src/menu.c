@@ -5,6 +5,7 @@
 #include "menu.h"
 #include "menu_data.h"
 #include "state.h"
+#include "T_curve.h"
 
 extern void safe_menu_render();
 
@@ -44,6 +45,14 @@ void menu_render(void) {
     /*Close with outside box*/
     draw_box();
 
+    /*Special case of T=f(t) see T_curve.c*/
+    if (strcmp(current_screen->id, "M0_0_1") == 0){
+            T_Curve_Display();
+            /* Push framebuffer to screen */
+            pcd8544_send(set_addr, 2, false);
+            pcd8544_send(fb, BUFFER_SIZE, true);
+            return;
+    }
     /* 2. Render Items Dynamically */ 
     for (int i = 0; i < current_screen->item_count && i < 5; i++) {
         int display_row = i + 1;
@@ -110,7 +119,7 @@ void menu_process_event(MenuEvent event) {
                 parent_screen = &screen_d0;
                 current_screen = &screen_m0;
                 current_selection = 0;
-            } else {
+            } else if(current_screen->items) {
                 const char *target = current_screen->items[current_selection].target_screen;
                 menu_action_cb_t action = current_screen->items[current_selection].target_action;
                 if (target) {
@@ -134,6 +143,8 @@ void menu_process_event(MenuEvent event) {
                     current_screen = &screen_d0;
                 } else if(current_screen == &screen_m0_2_0){
                     current_screen = &screen_m0_2;
+                } else if(current_screen == &screen_m0_0_1){
+                    current_screen = &screen_m0_0;
                 }
                 else{
                     current_screen = &screen_m0; // Fallback back to main menu

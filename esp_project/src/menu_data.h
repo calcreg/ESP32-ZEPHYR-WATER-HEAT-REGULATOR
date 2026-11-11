@@ -25,6 +25,7 @@ typedef struct {
 extern const Screen screen_d0;
 extern const Screen screen_m0;
 extern const Screen screen_m0_0;
+extern const Screen screen_m0_0_1;
 extern const Screen screen_m0_1;
 extern const Screen screen_m0_2;
 extern const Screen screen_m0_2_0;
