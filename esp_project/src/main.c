@@ -270,6 +270,7 @@ int main(void)
     }
     
     int ctn=0;
+    int temp_scaled_previous;
     while (1) {
         ctn++;
         // Change the state of the pin and print
@@ -287,9 +288,14 @@ int main(void)
             float Temp = GetTemperature(V_ADC);
             // Scale by 10 to keep one decimal place using integers
             int temp_scaled = (int)(Temp * 10.0f);
-            //LOG_INF("Temperature measured is %d.%d °C", temp_scaled / 10, abs(temp_scaled % 10));
-            snprintf (app_state.TempCurrently, sizeof(app_state.TempCurrently),"%2d@C",temp_scaled/10);
-            snprintf (app_state.TempMax, sizeof(app_state.TempMax),"%2d@C",temp_scaled/10);
+            if (temp_scaled != temp_scaled_previous) {
+                //LOG_INF("Temperature measured is %d.%d °C", temp_scaled / 10, abs(temp_scaled % 10));
+                snprintf (app_state.TempCurrently, sizeof(app_state.TempCurrently),"%2d,%1d@C",temp_scaled/10, abs(temp_scaled % 10));
+                snprintf (app_state.TempMax, sizeof(app_state.TempMax),"%2d,%1d@C",temp_scaled/10, abs(temp_scaled % 10));
+                temp_scaled_previous = temp_scaled;
+                if (strcmp(current_screen->id, "D0") == 0 || 
+                    strcmp(current_screen->id, "M0_0") == 0) safe_menu_render();
+            }
         }
         k_sleep(K_MSEC(1000));
     }
