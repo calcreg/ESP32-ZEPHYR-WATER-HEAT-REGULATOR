@@ -13,6 +13,7 @@ typedef struct {
     char TempCurrently[8]; //Actual Temp
     char TempMax[8];    //Pic Temp detected lastely
     char TempMin[8];    //Min detected lastly
+    char TempMaxAct[16];// Max°C / Act°C compilation of TempMax and TempCurrently
     char TempTarget[8]; // Temperature to reach
 
     /* Heating Schedules (Slot 1 & Slot 2) */

@@ -23,7 +23,7 @@ static const MenuItem items_d0[] = {
     { .label = ""},
     { .label = "   ", .strPtr = app_state.CurrentTime },
     { .label = " ", .strPtr = app_state.CurrentDate },
-    { .label = "   ", .strPtr = app_state.TempMax },
+    { .label = "", .strPtr = app_state.TempMaxAct },
     { .label = " ", .strPtr = app_state.GlobalState }
 };
 

@@ -289,8 +289,9 @@ int main(void)
             float Temp = GetTemperature(V_ADC);
             // Scale by 10 to keep one decimal place using integers
             int temp_scaled = (int)(Temp * 10.0f);
-            /*Save value of temperature along time every secs*/
-            if (ctn %10 == 0 ) append_temp_value(temp_scaled);
+            /*Save value of temperature along time every 30secs*/
+            if (ctn %30 == 0 ) append_temp_value(temp_scaled);
+
             /*Handle TempMin, TempMax*/
             static int min_scaled = 0;
             static int max_scaled = 0;
@@ -301,11 +302,9 @@ int main(void)
                 max_scaled = temp_scaled;
                 initialized = true;
             } else {
-                if (temp_scaled < min_scaled) {
-                    min_scaled = temp_scaled;
-                }
-                if (temp_scaled > max_scaled) {
-                    max_scaled = temp_scaled;
+                if (ctn %60 == 0 ) {
+                    max_scaled = 5 * (int)retrieve_local_maxmin(TMEMSIZE*3/4,0); //Search Max over the last 18 hours roughly
+                    min_scaled = 5 * (int)retrieve_local_maxmin(TMEMSIZE/10,1); //Search min over the last 18 hours roughly
                 }
             }
             /* /!\ the _scaled temperatures are coming from Temp*10 */
@@ -314,6 +313,7 @@ int main(void)
                 snprintf (app_state.TempCurrently, sizeof(app_state.TempCurrently),"%2d.%1d@C",temp_scaled/10, abs(temp_scaled % 10));
                 snprintf(app_state.TempMax, sizeof(app_state.TempMax), "%2d.%d@C", max_scaled / 10, abs(max_scaled % 10));
                 snprintf(app_state.TempMin, sizeof(app_state.TempMin), "%2d.%d@C", min_scaled / 10, abs(min_scaled % 10));
+                snprintf(app_state.TempMaxAct, sizeof(app_state.TempMaxAct), "%s/%s", app_state.TempMax,app_state.TempCurrently);
                 temp_scaled_previous = temp_scaled;
                 if (strcmp(current_screen->id, "D0") == 0 || 
                     strcmp(current_screen->id, "M0_0") == 0) safe_menu_render();

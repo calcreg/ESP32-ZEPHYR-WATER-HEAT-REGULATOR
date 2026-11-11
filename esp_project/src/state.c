@@ -9,6 +9,7 @@ AppState app_state = {
     .TempMax = "--@C",
     .TempMin = "--@C",
     .TempTarget = "60@C",
+    .TempMaxAct = "--.-@C/--.-@C",
     .TimeStartHeat1 = "06H00",
     .TimeStopHeat1  = "08H00",
     .TimeStartHeat2 = "20H00",

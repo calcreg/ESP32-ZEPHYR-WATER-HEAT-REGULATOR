@@ -59,4 +59,44 @@ void T_Curve_Display(){
     }
 }
 
+// Returns the maximum temperature as an integer (representing 2 * T)
+// e.g., A return value of 51 means 25.5°C (51 / 2)
+uint8_t retrieve_local_maxmin(int lookback_count, int maxmin) {
+    //if maxmin=0 we retrieve max, else retrieve min
+    int valid_items = buffer_wrapped ? TMEMSIZE : t_index;
+    if (valid_items == 0) {
+        return 0; // No data recorded yet
+    }
+
+    // Ensure we don't look back further than the data available
+    int count = (lookback_count < valid_items) ? lookback_count : valid_items;
+    if (count <= 0) {
+        return Temp_mem[0]; //Take the first value
+    }
+
+    uint8_t max_val = 0;
+    uint8_t min_val = 255; //Great value that is impossible to reach
+
+    // Iterate backwards from the most recent entry (t_index - 1)
+    for (int i = 0; i < count; i++) {
+        int index;
+        
+        if (buffer_wrapped) {
+            index = (t_index - 1 - i + TMEMSIZE) % TMEMSIZE;
+        } else {
+            index = (t_index - 1 - i);
+        }
+
+        uint8_t current_val = Temp_mem[index];
+        if (current_val < min_val) {
+            min_val = current_val;
+        }
+        if (current_val > max_val) {
+            max_val = current_val;
+        }
+    }
+
+    if (maxmin == 0)return max_val;
+    else return min_val;
+}
 

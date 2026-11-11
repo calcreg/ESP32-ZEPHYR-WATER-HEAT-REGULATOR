@@ -10,3 +10,4 @@ extern void safe_menu_render();
 
 extern void append_temp_value(int temp_scaled);
 extern void T_Curve_Display();
+extern uint8_t retrieve_local_maxmin(int lookback_count, int maxmin);
