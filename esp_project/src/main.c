@@ -303,8 +303,8 @@ int main(void)
                 initialized = true;
             } else {
                 if (ctn %60 == 0 ) {
-                    max_scaled = 5 * (int)retrieve_local_maxmin(TMEMSIZE*3/4,0); //Search Max over the last 18 hours roughly
-                    min_scaled = 5 * (int)retrieve_local_maxmin(TMEMSIZE/10,1); //Search min over the last 18 hours roughly
+                    max_scaled = 5 * (int)retrieve_local_maxmin(TMEMSIZE*3/4,RETRIEVE_MAX); //Search Max over the last 18 hours roughly
+                    min_scaled = 5 * (int)retrieve_local_maxmin(TMEMSIZE/10,RETRIEVE_MIN); //Search min over the last 18 hours roughly
                 }
             }
             /* /!\ the _scaled temperatures are coming from Temp*10 */
