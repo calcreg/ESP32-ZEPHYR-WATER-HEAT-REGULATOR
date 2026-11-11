@@ -189,7 +189,6 @@ K_THREAD_DEFINE(Heater, STACK_SIZE, Heater_thread_entry, NULL, NULL, NULL,
 int main(void)
 {
     int ret;
-    int state = 0;
 
     // Make sure that the GPIO was initialized
     if (!gpio_is_ready_dt(&led0)) {
@@ -273,10 +272,12 @@ int main(void)
     int temp_scaled_previous;
     while (1) {
         ctn++;
-        // Change the state of the pin and print
-        state = !state;
-        // Set pin state
-        gpio_pin_set_dt(&led0, state);
+        // Heartbit Led blinks every 5 secs
+        if (ctn % 5 == 0 ) {
+            gpio_pin_set_dt(&led0, 1);
+            k_sleep(K_MSEC(50));
+            gpio_pin_set_dt(&led0,0);;
+            }
         if (ctn %60 == 0 ) {
             refresh_local_time();
             if (strcmp(current_screen->id, "D0") == 0) safe_menu_render();
@@ -288,10 +289,30 @@ int main(void)
             float Temp = GetTemperature(V_ADC);
             // Scale by 10 to keep one decimal place using integers
             int temp_scaled = (int)(Temp * 10.0f);
+            /*Handle TempMin, TempMax*/
+            static int min_scaled = 0;
+            static int max_scaled = 0;
+            static bool initialized = false;
+
+            // Initialize min/max on the very first reading
+            if (!initialized) {
+                min_scaled = temp_scaled;
+                max_scaled = temp_scaled;
+                initialized = true;
+            } else {
+                if (temp_scaled < min_scaled) {
+                    min_scaled = temp_scaled;
+                }
+                if (temp_scaled > max_scaled) {
+                    max_scaled = temp_scaled;
+                }
+            }
+            /* /!\ the _scaled temperatures are coming from Temp*10 */
             if (temp_scaled != temp_scaled_previous) {
                 //LOG_INF("Temperature measured is %d.%d °C", temp_scaled / 10, abs(temp_scaled % 10));
-                snprintf (app_state.TempCurrently, sizeof(app_state.TempCurrently),"%2d,%1d@C",temp_scaled/10, abs(temp_scaled % 10));
-                snprintf (app_state.TempMax, sizeof(app_state.TempMax),"%2d,%1d@C",temp_scaled/10, abs(temp_scaled % 10));
+                snprintf (app_state.TempCurrently, sizeof(app_state.TempCurrently),"%2d.%1d@C",temp_scaled/10, abs(temp_scaled % 10));
+                snprintf(app_state.TempMax, sizeof(app_state.TempMax), "%2d.%d@C", max_scaled / 10, abs(max_scaled % 10));
+                snprintf(app_state.TempMin, sizeof(app_state.TempMin), "%2d.%d@C", min_scaled / 10, abs(min_scaled % 10));
                 temp_scaled_previous = temp_scaled;
                 if (strcmp(current_screen->id, "D0") == 0 || 
                     strcmp(current_screen->id, "M0_0") == 0) safe_menu_render();
