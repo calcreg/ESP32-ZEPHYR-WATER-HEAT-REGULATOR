@@ -31,6 +31,8 @@ typedef struct {
     char KD[8];//pid stuff
     float pid_integral;//pid stuff
     float prev_error; //pid stuff
+    float pid_output; //pid stuff
+    char LastHeatDuration[8]; //PID Stuff for review
     char CHTitle[16];       /*Immediat Heat Title, example : CH.:1H30*/
     /*For editing Time and Date*/
     bool is_editing;        // True if currently editing a time string

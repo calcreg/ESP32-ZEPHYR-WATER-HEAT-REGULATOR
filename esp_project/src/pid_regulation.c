@@ -40,9 +40,9 @@ int run_heating_regulation()
     //Do not mix with the TempCurrently which is the temperature measured on the pipe
     //As hot water is pourred, the pipe heats up and we extract the TempMax
     
-    //float current_temp_float = extract_float_from(app_state.TempMax);
-    /*for test only:*/
-    float current_temp_float = extract_float_from(app_state.TempCurrently);
+    float current_temp_float = extract_float_from(app_state.TempMax);
+    /*for test only:
+    float current_temp_float = extract_float_from(app_state.TempCurrently);*/
     float target_temp_float = extract_float_from(app_state.TempTarget);
     /*PID Regulation calculation and Heat/NoHeat determination*/
     float KP = extract_float_from(app_state.KP);
@@ -66,17 +66,17 @@ int run_heating_regulation()
     app_state.prev_error = error;
 
     // Total PID output (can represent duty cycle percentage 0-100%)
-    float pid_output = p_term + i_term + d_term;
-    LOG_INF("pid_output = %d, error=%d",(int)pid_output, (int)error);
+    app_state.pid_output = p_term + i_term + d_term;
+    LOG_INF("pid_output = %d, error=%d",(int)app_state.pid_output, (int)error);
 
-    /*pid_output = 5 => 0H30 heating
-                = 10 => 1H00 
-                = 20 => 2H00 
-                >= 30 => 3H00
-                return (pid_output * 6) minutes
+    /*pid_output = 10 => 0H30 heating
+                = 20 => 1H00 
+                = 40 => 2H00 
+                ...
+                return (app_state.pid_output * 3) minutes
                 */
-    if (pid_output <= 0) return 0;
-    else if (pid_output <= 30) return (int)(6.0f * pid_output);
+    if (app_state.pid_output <= 0) return 0;
+    else if (app_state.pid_output <= 60) return (int)(3.0f * app_state.pid_output);
     else return 6 * 30; //should rarely happen otherwise modify PID params
 }
 

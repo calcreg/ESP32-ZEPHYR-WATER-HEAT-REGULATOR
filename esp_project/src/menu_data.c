@@ -70,7 +70,8 @@ static const MenuItem items_m0_2[] = {
 static const MenuItem items_m0_3[] = {
     { .label = "KP: ", .strPtr = app_state.KP, .target_action = cb_set_kp },
     { .label = "KI: ", .strPtr = app_state.KI, .target_action = cb_set_ki },
-    { .label = "KD: ", .strPtr = app_state.KD, .target_action = cb_set_kd}
+    { .label = "KD: ", .strPtr = app_state.KD, .target_action = cb_set_kd },
+    { .label = "D-1: ", .strPtr = app_state.LastHeatDuration }
 };
 /* M0_2_0: HORAIRE CH. */
 static const MenuItem items_m0_2_0[] = {
@@ -87,7 +88,7 @@ const Screen screen_m0_0   = { "M0_0", "TEMP.EAU", "Temperatures", items_m0_0, 5
 const Screen screen_m0_0_1 = { "M0_0_1", "T=f(t)", "Display T=f(t)", NULL, 0 };
 const Screen screen_m0_1   = { "M0_1", app_state.CHTitle, "Heat Now", items_m0_1, 5 };
 const Screen screen_m0_2   = { "M0_2", "PARAMETRES", "Settings", items_m0_2, 6 };
-const Screen screen_m0_3   = { "M0_2", "KPI Settings", "set KPI", items_m0_3, 3 };
+const Screen screen_m0_3   = { "M0_2", "KPI Settings", "set KPI", items_m0_3, 4 };
 const Screen screen_m0_2_0 = { "M0_2_0", "HORAIRE CH.", "Heating Periods", items_m0_2_0, 5 };
 
 const Screen *get_screen_by_id(const char *id) {

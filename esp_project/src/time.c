@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <zephyr/logging/log.h>
+#include <ctype.h>
 
 LOG_MODULE_REGISTER(app_time, LOG_LEVEL_INF);
 
@@ -154,4 +155,28 @@ void update_system_time_from_strings(int TimeOrDate) {
         clock_settime(CLOCK_REALTIME, &ts);
         LOG_INF("Clock_settime done");
     }
+}
+
+
+/* Lightweight time parser without sscanf (safely reads "HH:MM" or "HHHMM") */
+int parse_time_str(const char *str) {
+    if (!str) return 0;
+    
+    int h = 0, m = 0;
+    
+    // Parse hours (first two characters)
+    if (str[0] >= '0' && str[0] <= '9' && str[1] >= '0' && str[1] <= '9') {
+        h = (str[0] - '0') * 10 + (str[1] - '0');
+    } else {
+        return 0;
+    }
+    
+    // Parse minutes (characters at index 3 and 4)
+    if (str[3] >= '0' && str[3] <= '9' && str[4] >= '0' && str[4] <= '9') {
+        m = (str[3] - '0') * 10 + (str[4] - '0');
+    } else {
+        return 0;
+    }
+    
+    return h * 60 + m;
 }
