@@ -13,6 +13,7 @@ void cb_set_duration_1H00(void);
 void cb_set_duration_1H30(void);
 void cb_set_duration_2H00(void);
 void cb_set_regulation(void);
+void cb_set_enableslot2(void);
 void cb_set_clock_time(void);
 void cb_set_date(void);
 void cb_set_target_temp(void);
@@ -75,6 +76,7 @@ static const MenuItem items_m0_3[] = {
 static const MenuItem items_m0_2_0[] = {
     { .label = "DEBUT1:" , .strPtr = app_state.TimeStartHeat1, .target_action = cb_set_Time },
     { .label = "FIN1  :" , .strPtr = app_state.TimeStopHeat1, .target_action = cb_set_Time },
+    { .label = "SLOT2: ", .strPtr = app_state.slot2, .target_action = cb_set_enableslot2 },
     { .label = "DEBUT2:" , .strPtr = app_state.TimeStartHeat2, .target_action = cb_set_Time },
     { .label = "FIN2  :" , .strPtr = app_state.TimeStopHeat2, .target_action = cb_set_Time }
 };
@@ -86,7 +88,7 @@ const Screen screen_m0_0_1 = { "M0_0_1", "T=f(t)", "Display T=f(t)", NULL, 0 };
 const Screen screen_m0_1   = { "M0_1", app_state.CHTitle, "Heat Now", items_m0_1, 5 };
 const Screen screen_m0_2   = { "M0_2", "PARAMETRES", "Settings", items_m0_2, 6 };
 const Screen screen_m0_3   = { "M0_2", "KPI Settings", "set KPI", items_m0_3, 3 };
-const Screen screen_m0_2_0 = { "M0_2_0", "HORAIRE CH.", "Heating Periods", items_m0_2_0, 4 };
+const Screen screen_m0_2_0 = { "M0_2_0", "HORAIRE CH.", "Heating Periods", items_m0_2_0, 5 };
 
 const Screen *get_screen_by_id(const char *id) {
     if (strcmp(id, "D0") == 0) return &screen_d0;
@@ -132,6 +134,12 @@ void cb_set_regulation(void) {
     
     //menu_render();
     safe_menu_render();
+}
+void cb_set_enableslot2(void){
+        /* Cycle through regulation modes: ON -> FULLON -> OFF -> ON */
+    if (strcmp(app_state.slot2, "ON") == 0) {
+        snprintf(app_state.slot2, sizeof(app_state.slot2), "OFF");
+    }else snprintf(app_state.slot2, sizeof(app_state.slot2), "ON");
 }
 
 void cb_set_Time(){

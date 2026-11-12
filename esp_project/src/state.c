@@ -12,6 +12,7 @@ AppState app_state = {
     .TempMaxAct = "--.-@C/--.-@C",
     .TimeStartHeat1 = "02H00",
     .TimeStopHeat1  = "08H00",
+    .slot2 = "OFF",
     .TimeStartHeat2 = "20H00",
     .TimeStopHeat2  = "22H00",
     .GlobalState = "-- ARRET --",

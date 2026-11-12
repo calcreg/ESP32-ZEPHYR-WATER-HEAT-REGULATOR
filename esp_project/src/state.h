@@ -19,6 +19,7 @@ typedef struct {
     /* Heating Schedules (Slot 1 & Slot 2) */
     char TimeStartHeat1[8];  /* e.g., "06:00" */
     char TimeStopHeat1[8];   /* e.g., "08:00" */
+    char slot2[8]; /*ON/OFF to enable/disable time window slot2*/
     char TimeStartHeat2[8];  /* e.g., "18:00" */
     char TimeStopHeat2[8];   /* e.g., "21:00" */
     char GlobalState[16];/*Heating Global State : ARRET / EN CHAUFFE / REGULATION*/

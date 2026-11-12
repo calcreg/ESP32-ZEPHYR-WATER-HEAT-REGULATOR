@@ -153,8 +153,9 @@ void Heater_thread_entry(void *p1, void *p2, void *p3)
         static int heating_remaining_sec = 0;
         static bool Heating_is_over = false; //to avoid recalculate duration and heat within the same in_time_window
         // Check if current time falls within Slot 1 or Slot 2
+        bool slot2 = strcmp(app_state.slot2, "ON") == 0 ? true : false; /*Enable slot2*/
         bool in_time_window = ((current_minutes >= start1 && current_minutes <= stop1) ||
-                               (current_minutes >= start2 && current_minutes <= stop2));
+                               (slot2 && current_minutes >= start2 && current_minutes <= stop2));
 
         // Heater logic
         if ((strcmp(app_state.RegulMode, "ON") == 0) 
