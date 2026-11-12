@@ -25,6 +25,11 @@ typedef struct {
     char State[16];/*Current State of the Heater ON/OFF*/
     char RegulMode[16]; /*Regulation Mode ON/FULLON/OFF*/
     char HeatDuration[8];   /*For immediate heat*/
+    char KP[8];//pid stuff
+    char KI[8];//pid stuff
+    char KD[8];//pid stuff
+    float pid_integral;//pid stuff
+    float prev_error; //pid stuff
     char CHTitle[16];       /*Immediat Heat Title, example : CH.:1H30*/
     /*For editing Time and Date*/
     bool is_editing;        // True if currently editing a time string

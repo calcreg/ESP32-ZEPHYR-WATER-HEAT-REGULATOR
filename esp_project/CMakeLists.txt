@@ -18,6 +18,7 @@ target_sources(app PRIVATE
     src/time.c
     src/adc.c
     src/T_curve.c
+    src/pid_regulation.c
     )
 
 

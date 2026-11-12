@@ -288,6 +288,36 @@ void modify_active_digit_2digitValue(char *val_str, int pos, int direction) {
     val_str[pos] = '0' + val;
 }
 
+/* For editing kpi --------------*/
+void modify_active_kpi(char *val_str, int pos, int direction) {
+    if (!val_str) return;
+    
+    char c = val_str[pos];
+    if (c < '0' || c > '9') return; // Safety check
+
+    int val = c - '0';
+    val += direction; // +1 for UP, -1 for DOWN
+
+    // Apply specific bounds per digit position in "HHHMM" format (index 2 is 'H')
+    switch (pos) {
+        case 0: // unit
+            if (val > 9) val = 0;
+            if (val < 0) val = 9;
+            break;
+        case 2: //
+            if (val > 9) val = 0;
+            if (val < 0) val = 9;
+            break;
+        case 3: // 
+            if (val > 9) val = 0;
+            if (val < 0) val = 9;
+            break;
+        default:
+            return; // Index 2 is '.', do nothing
+    }
+    val_str[pos] = '0' + val;
+}
+
 void small_blink(){
     sel_arrow = 1;//menu_render();
     safe_menu_render();
@@ -303,12 +333,14 @@ void menu_process_event_editing(MenuEvent event, char *val_str) {
             if (app_state.edit_what == 0 || app_state.edit_what == 2) modify_active_digit(val_str, app_state.edit_digit_pos, 1);
             else if (app_state.edit_what == 1) modify_active_digit_2digitValue(val_str, app_state.edit_digit_pos, 1);
             else if (app_state.edit_what == 3 )modify_active_digit_date(val_str, app_state.edit_digit_pos, 1);
+            else if (app_state.edit_what == 4 || app_state.edit_what == 5 || app_state.edit_what == 6)modify_active_kpi(val_str, app_state.edit_digit_pos, 1);
             break;
             
         case EVENT_DOWN:
             if (app_state.edit_what == 0 || app_state.edit_what == 2) modify_active_digit(val_str, app_state.edit_digit_pos, -1);
             else if (app_state.edit_what == 1) modify_active_digit_2digitValue(val_str, app_state.edit_digit_pos, -1);
             else if (app_state.edit_what == 3 )modify_active_digit_date(val_str, app_state.edit_digit_pos, -1);
+            else if (app_state.edit_what == 4 || app_state.edit_what == 5 || app_state.edit_what == 6)modify_active_kpi(val_str, app_state.edit_digit_pos, -1);
             break;
             
         case EVENT_SELECT:

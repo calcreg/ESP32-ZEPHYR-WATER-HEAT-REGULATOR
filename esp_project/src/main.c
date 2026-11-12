@@ -10,6 +10,7 @@
 #include "state.h"
 #include "menu_data.h"
 #include "T_curve.h"
+#include "pid_regulation.h"
 
 /* Define stack size and thread priority for pad-handling thread*/
 #define STACK_SIZE 1024
@@ -155,7 +156,8 @@ void Heater_thread_entry(void *p1, void *p2, void *p3)
 
         // 3. Heater logic
         if ((strcmp(app_state.RegulMode, "ON") == 0) && in_time_window) {
-            gpio_pin_set_dt(&heater, 1);
+            int pid_regul_output = run_heating_regulation(); //0 = NoHeat, 1= Heat
+            gpio_pin_set_dt(&heater, pid_regul_output );
             snprintf(app_state.GlobalState, sizeof(app_state.GlobalState), "EN CHAUFFE");
             snprintf(app_state.State, sizeof(app_state.State), "ON");
             state=1;
@@ -169,11 +171,13 @@ void Heater_thread_entry(void *p1, void *p2, void *p3)
             snprintf(app_state.State, sizeof(app_state.State), "ON");
             snprintf(app_state.GlobalState, sizeof(app_state.GlobalState), "TJRS EN CH.");
             state=3;
+            app_state.pid_integral = 0.0f; // Reset PID state when no regulation
         }else{
             gpio_pin_set_dt(&heater, 0);
             snprintf(app_state.State, sizeof(app_state.State), "OFF");
             snprintf(app_state.GlobalState, sizeof(app_state.GlobalState), "-- ARRET --");
             state=4;
+            app_state.pid_integral = 0.0f; // Reset PID state when no regulation
         }
         if (previous_state != state) safe_menu_render();
         previous_state = state;
