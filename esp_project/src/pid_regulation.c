@@ -51,12 +51,6 @@ int run_heating_regulation()
 
     float error = target_temp_float - current_temp_float;
 
-    if (error > 5.0f) {
-        //error is large from target, therefore Heat on to catchup
-        app_state.prev_error = error;
-        return REGUL_HEAT;
-    }
-
     // Proportional term
     float p_term = KP * error;
 
@@ -75,18 +69,14 @@ int run_heating_regulation()
     float pid_output = p_term + i_term + d_term;
     LOG_INF("pid_output = %d, error=%d",(int)pid_output, (int)error);
 
-    // Decision rule based on PID output (e.g., Time-Proportioned PWM or simple threshold)
-    if (pid_output > 0.0f) {
-        return REGUL_HEAT;
-    } else {
-        return REGUL_NOHEAT;
-    }
-    //Il faudrait plutot extraire un temps de chauffe en minutes
-    // entre 1H00 et 3H00 max soit 60 à 180 mins
-    /*pid_output = 5 => 0H30 de chauffe
-                = 10 => 1H00 de chauffe
-                = 20 => 2H00 de chauffe
-                >= 30 => 2H30 de chauffe 
+    /*pid_output = 5 => 0H30 heating
+                = 10 => 1H00 
+                = 20 => 2H00 
+                >= 30 => 3H00
+                return (pid_output * 6) minutes
                 */
+    if (pid_output <= 0) return 0;
+    else if (pid_output <= 30) return (int)(6.0f * pid_output);
+    else return 6 * 30; //should rarely happen otherwise modify PID params
 }
 

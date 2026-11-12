@@ -149,22 +149,38 @@ void Heater_thread_entry(void *p1, void *p2, void *p3)
         int stop2  = parse_time_str(app_state.TimeStopHeat2);
         int state = 0; /* can be 0,1 to 4*/
         static int previous_state = -1;
-
-        // 2. Check if current time falls within Slot 1 or Slot 2
+        // Non-blocking counter to keep track of remaining heating seconds across loop iterations
+        static int heating_remaining_sec = 0;
+        static bool Heating_is_over = false; //to avoid recalculate duration and heat within the same in_time_window
+        // Check if current time falls within Slot 1 or Slot 2
         bool in_time_window = ((current_minutes >= start1 && current_minutes <= stop1) ||
                                (current_minutes >= start2 && current_minutes <= stop2));
 
-        // 3. Heater logic
-        if ((strcmp(app_state.RegulMode, "ON") == 0) && in_time_window) {
-            int pid_regul_output = run_heating_regulation(); //0 = NoHeat, 1= Heat
-            gpio_pin_set_dt(&heater, pid_regul_output );
+        // Heater logic
+        if ((strcmp(app_state.RegulMode, "ON") == 0) 
+                && in_time_window 
+                && Heating_is_over == false) {
+                    
+            if (heating_remaining_sec <= 0) {
+                heating_remaining_sec = run_heating_regulation(); // Returns duration in seconds
+            }
             snprintf(app_state.GlobalState, sizeof(app_state.GlobalState), "EN CHAUFFE");
             snprintf(app_state.State, sizeof(app_state.State), "ON");
+            // Non-blocking Relay Command
+            if (heating_remaining_sec > 0) {
+                gpio_pin_set_dt(&heater, 1);
+                heating_remaining_sec--; // Decrement by 1 second on every loop tick
+            } else {
+                //Don't heat when duration is over although we are in_time_window
+                gpio_pin_set_dt(&heater, 0);
+                Heating_is_over = true; /*Once in_time_window regulation and duration calculated done cannot calculate again before reset*/
+            }
             state=1;
         }else if ((strcmp(app_state.RegulMode, "ON") == 0) && !in_time_window) {
             gpio_pin_set_dt(&heater, 0);
             snprintf(app_state.GlobalState, sizeof(app_state.GlobalState), "HORS PLAGE");
             snprintf(app_state.State, sizeof(app_state.State), "OFF");
+            Heating_is_over = false; /*Reset the Heating possiblity*/
             state=2;
         } else if (strcmp(app_state.RegulMode, "FULLON") == 0) {
             gpio_pin_set_dt(&heater, 1);
