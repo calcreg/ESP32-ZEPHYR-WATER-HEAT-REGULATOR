@@ -6,6 +6,7 @@
 
 //extern void menu_render(); /*In menu.c*/
 extern void safe_menu_render();
+extern void small_blink();
 /* Forward declare your callback functions */
 void cb_set_duration_0H30(void);
 void cb_set_duration_0H45(void);
@@ -149,6 +150,7 @@ void cb_set_Time(){
     app_state.edit_what = 0; /*For Heater Time Schedule*/
     app_state.edit_digit_pos = 0;
     app_state.edit_lastdigit_pos = 4; /*0,1,3,4*/
+    small_blink();
 }
 
 void cb_set_target_temp(void){
@@ -157,6 +159,7 @@ void cb_set_target_temp(void){
     app_state.edit_what = 1; /*For TempTarget*/
     app_state.edit_digit_pos = 0;
     app_state.edit_lastdigit_pos = 1; /*0 and 1*/
+    small_blink();
 }
 
 void cb_set_clock_time(void){
@@ -164,6 +167,7 @@ void cb_set_clock_time(void){
     app_state.edit_what = 2; /*For Time*/
     app_state.edit_digit_pos = 0;
     app_state.edit_lastdigit_pos = 4; /*0,1,3,4*/
+    small_blink();
 }
 
 void cb_set_date(void){
@@ -171,6 +175,7 @@ void cb_set_date(void){
     app_state.edit_what = 3; /*For Date*/
     app_state.edit_digit_pos = 0;
     app_state.edit_lastdigit_pos = 9; /*0,1,3,4,6,7,8,9*/
+    small_blink();
 }
 
 void cb_set_kp(void){
@@ -178,16 +183,19 @@ void cb_set_kp(void){
     app_state.edit_what = 4; /*For kp*/
     app_state.edit_digit_pos = 0;
     app_state.edit_lastdigit_pos = 3; /*0,2,3*/
+    small_blink();
 }
 void cb_set_ki(void){
     app_state.is_editing = true;
     app_state.edit_what = 5; /*For ki*/
     app_state.edit_digit_pos = 0;
     app_state.edit_lastdigit_pos = 3; /*0,2,3*/
+    small_blink();
 }
 void cb_set_kd(void){
     app_state.is_editing = true;
     app_state.edit_what = 6; /*For kd*/
     app_state.edit_digit_pos = 0;
     app_state.edit_lastdigit_pos = 3; /*0,2,3*/
+    small_blink();
 }
