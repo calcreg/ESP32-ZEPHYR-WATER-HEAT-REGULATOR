@@ -8,6 +8,7 @@ extern void safe_menu_render();
 
 extern void append_temp_value(int temp_scaled);
 extern void T_Curve_Display(int mode);
+extern void HT_Curve_Display(int mode);
 extern uint8_t retrieve_local_maxmin(int lookback_count, int maxmin);
 
 #define TMEMSIZE (24 * 60 * 2) // Temperature every 30secs on a day is a cycle
@@ -16,5 +17,7 @@ extern uint8_t retrieve_local_maxmin(int lookback_count, int maxmin);
 #define RETRIEVE_MAX 0 //Retrieve max over the period of time
 #define RETRIEVE_MIN 1 //Retrieve min over the period of time
 
+#define DISPLAY_HEIGHT_TR (DISPLAY_HEIGHT - 8)
+#define HTMEMSIZE 31*2 // Heating Time recordings 1 per day
 
 

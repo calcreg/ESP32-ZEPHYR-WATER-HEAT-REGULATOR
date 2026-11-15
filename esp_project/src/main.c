@@ -143,6 +143,7 @@ void Heater_thread_entry(void *p1, void *p2, void *p3)
         // If we haven't started heating yet for this window, get duration and set absolute target end time
         if (heating_end_time_mins == -1) {
             int duration_mins = run_heating_regulation(); // Returns duration in MINUTES
+            append_Heat_Time_value(duration_mins);//append Heat_Time value in mem
             heating_end_time_mins = current_minutes + duration_mins;
             snprintf(app_state.LastHeatDuration, sizeof(app_state.LastHeatDuration), "-->:%3dmins",duration_mins);
         }

@@ -26,6 +26,8 @@ static int current_selection = 0;
 int sel_arrow = 0; /*0 = Dark background, 1 = Left Arrow*/
 /*Initialize T=f(t) display mode*/
 int Mode_Menu_M0_0_1 = DISPLAY_MODE_RECENT;
+/*Initialize H.T=f(t) display mode*/
+int Mode_Menu_M0_3_0 = DISPLAY_MODE_RECENT;
 
 void menu_init(void) {
     current_screen = &screen_d0;
@@ -50,6 +52,14 @@ void menu_render(void) {
     /*Special case of T=f(t) see T_curve.c*/
     if (strcmp(current_screen->id, "M0_0_1") == 0){
             T_Curve_Display(Mode_Menu_M0_0_1);
+            /* Push framebuffer to screen */
+            pcd8544_send(set_addr, 2, false);
+            pcd8544_send(fb, BUFFER_SIZE, true);
+            return;
+    }
+    /*Special case of H.T=f(t) see T_curve.c*/
+    if (strcmp(current_screen->id, "M0_3_0") == 0){
+            HT_Curve_Display(Mode_Menu_M0_3_0);
             /* Push framebuffer to screen */
             pcd8544_send(set_addr, 2, false);
             pcd8544_send(fb, BUFFER_SIZE, true);
@@ -128,7 +138,13 @@ void menu_process_event(MenuEvent event) {
                     Mode_Menu_M0_0_1 = DISPLAY_MODE_FULL;
                 else
                     Mode_Menu_M0_0_1 = DISPLAY_MODE_RECENT;
-            } else if(current_screen->items) {
+            }else if (current_screen == &screen_m0_3_0){
+                /*Toggle H.T=f(t) display mode at each btn_sel press*/
+                if (Mode_Menu_M0_3_0 == DISPLAY_MODE_RECENT)
+                    Mode_Menu_M0_3_0 = DISPLAY_MODE_FULL;
+                else
+                    Mode_Menu_M0_3_0 = DISPLAY_MODE_RECENT;
+            }else if(current_screen->items) {
                 const char *target = current_screen->items[current_selection].target_screen;
                 menu_action_cb_t action = current_screen->items[current_selection].target_action;
                 if (target) {
@@ -154,6 +170,8 @@ void menu_process_event(MenuEvent event) {
                     current_screen = &screen_m0_2;
                 } else if(current_screen == &screen_m0_0_1){
                     current_screen = &screen_m0_0;
+                } else if(current_screen == &screen_m0_3_0){
+                    current_screen = &screen_m0_3;
                 }
                 else{
                     current_screen = &screen_m0; // Fallback back to main menu

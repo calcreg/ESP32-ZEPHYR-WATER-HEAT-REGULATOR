@@ -29,6 +29,8 @@ extern const Screen screen_m0_0_1;
 extern const Screen screen_m0_1;
 extern const Screen screen_m0_2;
 extern const Screen screen_m0_2_0;
+extern const Screen screen_m0_3;
+extern const Screen screen_m0_3_0;
 
 const Screen *get_screen_by_id(const char *id);
 
