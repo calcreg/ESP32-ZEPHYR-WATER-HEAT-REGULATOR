@@ -69,14 +69,14 @@ int run_heating_regulation()
     app_state.pid_output = p_term + i_term + d_term;
     LOG_INF("pid_output = %d, error=%d",(int)app_state.pid_output, (int)error);
 
-    /*pid_output = 10 => 0H30 heating
-                = 20 => 1H00 
-                = 40 => 2H00 
+    /*pid_output = 10 => 0H40 heating
+                = 20 => 1H20 
+                = 45 => 3H00
                 ...
-                return (app_state.pid_output * 3) minutes
+                return (app_state.pid_output * 6) minutes
                 */
     if (app_state.pid_output <= 0) return 0;
-    else if (app_state.pid_output <= 60) return (int)(3.0f * app_state.pid_output);
-    else return 6 * 30; //should rarely happen otherwise modify PID params
+    else if (app_state.pid_output <= 45) return (int)(4.0f * app_state.pid_output);
+    else return 180; //should rarely happen otherwise modify PID params
 }
 
