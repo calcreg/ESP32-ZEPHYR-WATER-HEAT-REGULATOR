@@ -118,13 +118,13 @@ void menu_process_event(MenuEvent event) {
         case EVENT_UP:
             if (current_selection > 0) {
                 current_selection--;
-            }
+            }else current_selection = current_screen->item_count - 1;
             break;
 
         case EVENT_DOWN:
             if (current_selection < current_screen->item_count - 1) {
                 current_selection++;
-            }
+            }else current_selection = 0;
             break;
 
         case EVENT_SELECT:
