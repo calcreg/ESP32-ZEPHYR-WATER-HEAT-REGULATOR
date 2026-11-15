@@ -29,12 +29,17 @@ void T_Curve_Display(int mode) {
     int valid_items = buffer_wrapped ? TMEMSIZE : t_index;
     
     if (valid_items < 2) {
+        fbprint(10, 2, "Pas assez de");
+        fbprint(10, 3, "donnees ...");
+        fbprint(10, 4, "Attendre SVP");
         return; // Not enough data to draw a curve
     }
 
     // Determine how many horizontal steps to draw
     int n_steps = (valid_items < DISPLAY_WIDTH) ? valid_items : DISPLAY_WIDTH;
     int start_offset = (mode == DISPLAY_MODE_RECENT && valid_items > DISPLAY_WIDTH) ? (valid_items - DISPLAY_WIDTH) : 0;
+    /* 40 pix height -> 90 °C amplitude => *40 / (90 * 2) */
+    #define display_factor 40 / (70 * 2) ; //display_factor for 70°C amplitude
 
     for (int x = 0; x < n_steps - 1; x++) {
         int k1, k2;
@@ -53,8 +58,8 @@ void T_Curve_Display(int mode) {
         int src_index2 = buffer_wrapped ? (t_index + k2) % TMEMSIZE : k2;
 
         // Calculate Y coordinates
-        int Y1 = DISPLAY_HEIGHT - (int)Temp_mem[src_index1] * 40 / (90 * 2);
-        int Y2 = DISPLAY_HEIGHT - (int)Temp_mem[src_index2] * 40 / (90 * 2);
+        int Y1 = DISPLAY_HEIGHT - (int)Temp_mem[src_index1] * display_factor;
+        int Y2 = DISPLAY_HEIGHT - (int)Temp_mem[src_index2] * display_factor;
 
         fb_draw_line(x, Y1, x + 1, Y2);
     }
@@ -65,7 +70,7 @@ void T_Curve_Display(int mode) {
     }
     /* Draw a horizontal reference line at T = 50°C */
     int target_temp_2T = 50 * 2; // Since memory stores 2 * T (half-degree steps)
-    int y_line = DISPLAY_HEIGHT - (int)target_temp_2T * 40 / (90 * 2);
+    int y_line = DISPLAY_HEIGHT - (int)target_temp_2T * display_factor;
 
     for (int x = 0; x < DISPLAY_WIDTH; x++) {
         // Optional: Make it a dashed line by checking (x % 2 == 0) if you don't want it solid
@@ -75,12 +80,13 @@ void T_Curve_Display(int mode) {
         for (int x = 12; x < DISPLAY_WIDTH-12; x++) {
         fb[5*DISPLAY_WIDTH + x] |= 0x80;    // Missing part of Bottom edge
     }
-    /* Draw short horizontal reference lines at T = 30°C, 40°C, 60°C, and 70°C */
-    int ref_temps[] = {30, 40, 60, 70};
+    /* Draw short horizontal reference lines at T = 30°C, 40°C, 60°C */
+    int ref_temps[] = {30, 40, 60};
     int num_temps = sizeof(ref_temps) / sizeof(ref_temps[0]);
 
     for (int i = 0; i < num_temps; i++) {
-        int y_line = DISPLAY_HEIGHT - (ref_temps[i] * 2) * 40 / (90 * 2);
+        
+        int y_line = DISPLAY_HEIGHT - (ref_temps[i] * 2) * display_factor;
 
         // Draw short ticks on Left, Center, and Right
         fb_draw_line(0, y_line, 3, y_line);  // Left edge
