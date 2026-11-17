@@ -26,6 +26,7 @@ typedef struct {
     char State[16];/*Current State of the Heater ON/OFF*/
     char RegulMode[16]; /*Regulation Mode ON/FULLON/OFF*/
     char HeatDuration[8];   /*For immediate heat*/
+    char HeatDurationLaunch[8]; /*ON=Instant heat duration is activated*/
     char KP[8];//pid stuff
     char KI[8];//pid stuff
     char KD[8];//pid stuff

@@ -158,22 +158,44 @@ void update_system_time_from_strings(int TimeOrDate) {
 }
 
 
-/* Lightweight time parser without sscanf (safely reads "HH:MM" or "HHHMM") */
+/* Lightweight time parser supporting both single ("0H30", "1H00") and double ("15H30", "01H00") digit hours */
 int parse_time_str(const char *str) {
     if (!str) return 0;
     
     int h = 0, m = 0;
+    int sep_idx = -1;
     
-    // Parse hours (first two characters)
-    if (str[0] >= '0' && str[0] <= '9' && str[1] >= '0' && str[1] <= '9') {
-        h = (str[0] - '0') * 10 + (str[1] - '0');
-    } else {
-        return 0;
+    // Dynamically find the index of the separator ('H', 'h', or ':')
+    for (int i = 0; str[i] != '\0'; i++) {
+        if (str[i] == 'H' || str[i] == 'h' || str[i] == ':') {
+            sep_idx = i;
+            break;
+        }
     }
     
-    // Parse minutes (characters at index 3 and 4)
-    if (str[3] >= '0' && str[3] <= '9' && str[4] >= '0' && str[4] <= '9') {
-        m = (str[3] - '0') * 10 + (str[4] - '0');
+    // Case 1: Single-digit hour (e.g., "0H30" or "1H00" -> separator at index 1)
+    if (sep_idx == 1) {
+        if (str[0] >= '0' && str[0] <= '9') {
+            h = str[0] - '0';
+        } else {
+            return 0;
+        }
+    }
+    // Case 2: Two-digit hour (e.g., "15H30" or "01H00" -> separator at index 2)
+    else if (sep_idx == 2) {
+        if (str[0] >= '0' && str[0] <= '9' && str[1] >= '0' && str[1] <= '9') {
+            h = (str[0] - '0') * 10 + (str[1] - '0');
+        } else {
+            return 0;
+        }
+    } else {
+        return 0; // Invalid separator position or missing separator
+    }
+    
+    // Parse minutes (the two characters immediately following the separator)
+    if (str[sep_idx + 1] >= '0' && str[sep_idx + 1] <= '9' && 
+        str[sep_idx + 2] >= '0' && str[sep_idx + 2] <= '9') {
+        m = (str[sep_idx + 1] - '0') * 10 + (str[sep_idx + 2] - '0');
     } else {
         return 0;
     }

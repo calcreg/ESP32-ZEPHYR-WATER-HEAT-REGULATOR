@@ -13,6 +13,7 @@ void cb_set_duration_0H45(void);
 void cb_set_duration_1H00(void);
 void cb_set_duration_1H30(void);
 void cb_set_duration_2H00(void);
+void cb_Launch_Instant_Heat(void);
 void cb_set_regulation(void);
 void cb_set_enableslot2(void);
 void cb_set_clock_time(void);
@@ -52,10 +53,10 @@ static const MenuItem items_m0_0[] = {
 /* M0_1: CHAUFFER */
 static const MenuItem items_m0_1[] = {
     { .label = "  0H30 ", .target_action = cb_set_duration_0H30 },
-    { .label = "  0H45 ", .target_action = cb_set_duration_0H45 },
     { .label = "  1H00 ", .target_action = cb_set_duration_1H00 },
     { .label = "  1H30 ", .target_action = cb_set_duration_1H30 },
-    { .label = "  2H00 ", .target_action = cb_set_duration_2H00 }
+    { .label = "  2H00 ", .target_action = cb_set_duration_2H00 },
+    { .label = "Lancer CH:", .strPtr = app_state.HeatDurationLaunch, .target_action = cb_Launch_Instant_Heat},
 };
 
 /* M0_2: PARAMETRES */
@@ -117,10 +118,18 @@ static void apply_duration(const char *dur) {
 
 /* 2. Tiny wrapper functions matching the void (*)(void) menu signature */
 void cb_set_duration_0H30(void) { apply_duration("0H30"); }
-void cb_set_duration_0H45(void) { apply_duration("0H45"); }
 void cb_set_duration_1H00(void) { apply_duration("1H00"); }
 void cb_set_duration_1H30(void) { apply_duration("1H30"); }
 void cb_set_duration_2H00(void) { apply_duration("2H00"); }
+void cb_Launch_Instant_Heat(void){
+     /*Set Flag for instant heat duration*/
+     if (strcmp(app_state.HeatDurationLaunch, "ON") == 0) {
+     snprintf(app_state.HeatDurationLaunch, sizeof(app_state.HeatDurationLaunch), "OFF");
+     }else{
+     snprintf(app_state.HeatDurationLaunch, sizeof(app_state.HeatDurationLaunch), "ON");
+     }
+     safe_menu_render();
+}
 
 void cb_set_regulation(void) {
     /* Cycle through regulation modes: ON -> FULLON -> OFF -> ON */

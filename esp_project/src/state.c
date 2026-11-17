@@ -24,6 +24,7 @@ AppState app_state = {
     .KI = "0.05",
     .KD = "1.00",
     .LastHeatDuration = "0 MINS",
+    .HeatDurationLaunch = "OFF",
     .adcReady = false,
     .pid_integral = 0.0f, // Reset PID state
     .prev_error = 0.0f,
